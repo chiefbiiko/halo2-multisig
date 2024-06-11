@@ -30,15 +30,11 @@ clap-num = "=1.0.2"
 
 # halo2
 # halo2, features turned on by axiom-eth
-# axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["providers", "aggregation", "evm"] }
-# axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false }
-# axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
+axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["providers", "aggregation", "evm"] }
+axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false }
+axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
-# halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", tag = "v2023_02_02" }
-
-halo2-base = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom", "test-utils"] }
-halo2-ecc = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom"] }
-snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true}
+halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", tag = "v2023_02_02" }
 
 # crypto
 rlp = "0.5.2"
@@ -75,20 +71,15 @@ blake3 = { version = "=1.5" }
 # halo2-scaffold = { branch = "feat/0.3.0", git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
 # halo2-scaffold = { path = "../halo2-scaffold" }
 
-
-
 [features]
-# default = ["halo2-axiom", "jemallocator", "display", "keygen"]
-# display = ["axiom-eth/display", "dep:ark-std"]
-# asm = ["axiom-eth/asm"]
-# revm = ["axiom-eth/revm"]
-# # halo2-pse = ["axiom-eth/halo2-pse"]
-# halo2-axiom = ["axiom-eth/halo2-axiom"]
-# jemallocator = ["axiom-eth/jemallocator"]
-# keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
-scripts = ["snark-verifier-sdk"]
-
-
+default = ["halo2-axiom", "jemallocator", "display", "keygen"]
+display = ["axiom-eth/display", "dep:ark-std"]
+asm = ["axiom-eth/asm"]
+revm = ["axiom-eth/revm"]
+# halo2-pse = ["axiom-eth/halo2-pse"]
+halo2-axiom = ["axiom-eth/halo2-axiom"]
+jemallocator = ["axiom-eth/jemallocator"]
+keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
 
 # Dev / testing mode. We make opt-level = 3 to improve proving times (otherwise it is really slow)
 [profile.dev]
