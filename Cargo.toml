@@ -32,7 +32,7 @@ clap-num = "=1.0.2"
 # halo2, features turned on by axiom-eth
 axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["providers", "aggregation", "evm"] }
 axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false }
-axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git" }
+axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", tag = "v2023_02_02" }
 
@@ -48,7 +48,8 @@ enum_dispatch = { version = "0.3.12", optional = true }
 serde_yaml = { version = "0.9.16", optional = true }
 
 # Axiom's helper API with basic functions
-halo2-base = { version = "=0.4.1", default-features = false, features = ["test-utils"] }
+# halo2-base = { version = "=0.4.1", default-features = false, features = ["test-utils"] } 
+# halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", tag = "v0.4.1-git", default-features = false, features = ["test-utils"] } 
 # halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "community-edition" }
 # snark-verifier-sdk = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "community-edition" }
 
@@ -67,7 +68,8 @@ ethers-providers = { version = "2.0.14" }
 futures = { version = "0.3" }
 blake3 = { version = "=1.5" }
 
-# halo2-scaffold = { git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
+# halo2-scaffold = { branch = "feat/0.3.0", git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
+# halo2-scaffold = { path = "../halo2-scaffold" }
 
 [features]
 default = ["halo2-axiom", "jemallocator", "display", "keygen"]

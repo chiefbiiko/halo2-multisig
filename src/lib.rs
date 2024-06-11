@@ -53,8 +53,8 @@ use axiom_query::components::subqueries::storage::types::{
     CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery,
 };
 
-use halo2_scaffold::scaffold::cmd::Cli;
-use halo2_scaffold::scaffold::run;
+// use halo2_scaffold::scaffold::cmd::Cli;
+// use halo2_scaffold::scaffold::run;
 
 pub struct CoreBuilderStorageSubquery<F: Field> {
     input: Option<CircuitInputStorageShard<F>>,
@@ -266,11 +266,22 @@ pub fn handle_single_storage_subquery_phase1<F: Field>(
 
 ////////////////////////////
  
+use axiom_eth::halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+
 fn main() {
     env_logger::init();
 
-    let args = Cli::parse();
-
-    // run different zk commands based on the command line arguments
-    run(some_algorithm_in_zk, args);
+    // init CoreBuilderStorageSubquery
+    
+    // build the builder
+    
 }
+
+// fn main() {
+//     env_logger::init();
+
+//     let args = Cli::parse();
+
+//     // run different zk commands based on the command line arguments
+//     run(some_algorithm_in_zk, args);
+// }
