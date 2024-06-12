@@ -20,13 +20,14 @@
     providers::storage::json_to_mpt_input,
     storage::EthStorageChip,
     utils::{
+        constrain_vec_equal,
         hilo::HiLo,
         circuit_utils::bytes::{unsafe_mpt_root_to_hi_lo, pack_bytes_to_hilo},
         component::{ComponentType, promise_collector::{PromiseCaller, PromiseCollector}},
         encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
         zkevm_hashes::util::eth_types::ToBigEndian,
 };
-// use axiom_query::utils::codec::AssignedAccountSubquery;
+use axiom_query::{utils::codec::AssignedAccountSubquery, components::subqueries::account::types::{FieldAccountSubqueryCall, ComponentTypeAccountSubquery}};
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
