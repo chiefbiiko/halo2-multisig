@@ -1,20 +1,21 @@
-use halo2_base::{
-    // gates::{ GateChip, GateInstructions, RangeChip, RangeInstructions },
-    gates::circuit::builder::BaseCircuitBuilder,
-    // halo2_proofs::halo2curves::{ bn256::Fr, secp256k1::{ Fp, Fq, Secp256k1Affine } },
-    // poseidon::hasher::PoseidonHasher,
-    // utils::BigPrimeField,
-    AssignedValue,
-    Context,
-    safe_types::SafeTypeChip,
-    // QuantumCell,
-  };
+// use halo2_base::{
+//     // gates::{ GateChip, GateInstructions, RangeChip, RangeInstructions },
+//     // gates::circuit::builder::BaseCircuitBuilder,
+//     // halo2_proofs::halo2curves::{ bn256::Fr, secp256k1::{ Fp, Fq, Secp256k1Affine } },
+//     // poseidon::hasher::PoseidonHasher,
+//     // utils::BigPrimeField,
+//     // AssignedValue,
+//     // Context,
+//     // safe_types::SafeTypeChip,
+//     // QuantumCell,
+//   };
   use axiom_eth::{
+    halo2_base::{Context, gates::circuit::builder::BaseCircuitBuilder},
     keccak::{KeccakChip, types::ComponentTypeKeccak},
     rlp::RlpChip,
     mpt::MPTChip,
     Field,
-    rlc::circuit::builder::RlcCircuitBuilder,
+    // rlc::circuit::builder::RlcCircuitBuilder,
     storage::circuit::EthStorageInput,
     providers::storage::json_to_mpt_input,
     storage::EthStorageChip,
@@ -33,11 +34,11 @@ const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 
 /// This means we can concatenate arrays with individual max length 2^32.
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
-pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
+// pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
 
 // const STATE_ROOT_INDEX: usize = 3;
 
-pub fn create_ctx_and_chip<F: Field>() -> (Context<F>, EthStorageChip<F>) {
+pub fn create_ctx_and_chip<'chip, F: Field>() -> (&'chip Context<F>, &'chip EthStorageChip<'chip, F>) {
         // preamble: to be removed
         //RangeChip PromiseCaller
 
@@ -66,9 +67,9 @@ pub fn create_ctx_and_chip<F: Field>() -> (Context<F>, EthStorageChip<F>) {
     let mpt = MPTChip::new(rlp, &keccak);
     let chip = EthStorageChip::new(&mpt, None);
 
-    let ctx = *builder.main(0);
-
-    (ctx, chip)
+    let ctx = builder.main(0);
+    // give 'chip lifetime to chip, mpt, keccak, builder
+    (ctx, &chip)
 }
 
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
