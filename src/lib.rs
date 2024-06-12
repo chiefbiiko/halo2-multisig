@@ -1,5 +1,6 @@
 use halo2_base::{
     // gates::{ GateChip, GateInstructions, RangeChip, RangeInstructions },
+    gates::circuit::builder::BaseCircuitBuilder,
     // halo2_proofs::halo2curves::{ bn256::Fr, secp256k1::{ Fp, Fq, Secp256k1Affine } },
     // poseidon::hasher::PoseidonHasher,
     // utils::BigPrimeField,
@@ -9,20 +10,66 @@ use halo2_base::{
     // QuantumCell,
   };
   use axiom_eth::{
+    keccak::{KeccakChip, types::ComponentTypeKeccak},
+    rlp::RlpChip,
+    mpt::MPTChip,
     Field,
+    rlc::circuit::builder::RlcCircuitBuilder,
     storage::circuit::EthStorageInput,
     providers::storage::json_to_mpt_input,
     storage::EthStorageChip,
-    utils::{encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher}
+    utils::{
+        component::{ComponentType, promise_collector::{PromiseCaller, PromiseCollector}},
+        encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher}
 };
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
+
+use std::sync::{Arc, Mutex};
 
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
 const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 
+/// This means we can concatenate arrays with individual max length 2^32.
+/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
+pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
+
 // const STATE_ROOT_INDEX: usize = 3;
+
+pub fn create_ctx_and_chip<F: Field>() -> (Context<F>, EthStorageChip<F>) {
+        // preamble: to be removed
+        //RangeChip PromiseCaller
+
+    let k = 10; // your circuit will have 2^k rows
+    let witness_gen_only = false; // constraints are ignored if set to true
+    let mut builder = BaseCircuitBuilder::new(witness_gen_only).use_k(k);
+    // If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`
+    let lookup_bits = k - 1;
+    builder.set_lookup_bits(lookup_bits);
+
+    let promise_collector = Arc::new(Mutex::new(PromiseCollector::new(vec![
+        ComponentTypeKeccak::<F>::get_type_id(),
+    ])));
+
+    let keccak =
+        KeccakChip::new_with_promise_collector(builder.range_chip(), PromiseCaller::new(promise_collector));
+    let range_chip = keccak.range();
+    let rlp = RlpChip::new(range_chip, None);
+    // let mut poseidon = create_hasher();
+    // poseidon.initialize_consts(builder.base.main(0), keccak.gate());
+
+    // Assumption: we already have input when calling this function.
+    // TODO: automatically derive a dummy input from params.
+    // let input = self.input.as_ref().unwrap();
+
+    let mpt = MPTChip::new(rlp, &keccak);
+    let chip = EthStorageChip::new(&mpt, None);
+
+    let ctx = *builder.main(0);
+
+    (ctx, chip)
+}
 
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
