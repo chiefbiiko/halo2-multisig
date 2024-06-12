@@ -10,7 +10,7 @@
 //     // QuantumCell,
 //   };
   use axiom_eth::{
-    halo2_base::{Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}, safe_types::SafeTypeChip},
+    halo2_base::{AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}, safe_types::SafeTypeChip},
     keccak::{KeccakChip, types::ComponentTypeKeccak},
     rlp::RlpChip,
     mpt::MPTChip,
@@ -26,20 +26,23 @@
         encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
         zkevm_hashes::util::eth_types::ToBigEndian,
 };
+// use axiom_query::utils::codec::AssignedAccountSubquery;
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
-
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
 const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 const STORAGE_PROOF_MAX_DEPTH: usize = 13;
-// your circuit will have 2^k rows
+/// The circuit will have 2^k rows.
 const K: usize = 10;
-// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`
+/// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
 const LOOKUP_BITS: usize = K - 1;
-// constraints are ignored if set to true
+/// Constraints are ignored if set to true.
 const WITNESS_GEN_ONLY: bool = false;
+/// Index of the storage root in an account.
+const STORAGE_ROOT_INDEX: usize = 2;
 
 /// This means we can concatenate arrays with individual max length 2^32.
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
@@ -146,8 +149,16 @@ pub fn verify_eip1186<F: Field>(
 // self.payload = Some((keccak, payload));
 // CoreBuilderOutput { public_instances: vec![], virtual_table: vt, logical_results: lr }
 
+// #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize, Default)]
+// pub struct FieldAccountSubquery<T> {
+//     pub block_number: T,
+//     pub addr: T, // F::CAPACITY >= 160
+//     pub field_idx: T,
+// }
+// type AssignedAccountSubquery<F> = FieldAccountSubquery<AssignedValue<F>>;
+
 let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
-for p in payload.iter() {
+// for p in payload.iter() {
     let block_number = p.output.subquery.block_number;
     let addr = p.output.subquery.addr;
     let storage_root = p.storage_root;
@@ -160,7 +171,7 @@ for p in payload.iter() {
         )
         .unwrap();
     constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
-}
+// }
 
 // fn virtual_assign_phase1(&mut self, builder: &mut RlcCircuitBuilder<F>) {
 //     let (keccak, payload) = self.payload.take().unwrap();

@@ -41,6 +41,7 @@ halo2-base = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch =
 # halo2-ecc = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom"] }
 snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
 axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers"] }
+# axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 # crypto
 rlp = "0.5.2"
