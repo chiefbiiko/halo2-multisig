@@ -67,6 +67,17 @@ const STORAGE_ROOT_INDEX: usize = 2;
 //     (ctx, chip)
 // }
 
+/// Circuit input for a single Storage subquery.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CircuitInputStorageSubquery {
+    /// The block number to access the storage state at.
+    pub block_number: u64,
+    /// Storage proof formatted as MPT input. It will contain the account address.
+    /// ### Warning
+    /// `proof.acct_pf` will be empty and `proof` will **not** have state_root set.
+    pub proof: EthStorageInput,
+}
+
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
     input.acct_pf.root_hash = block.state_root;
@@ -77,16 +88,17 @@ pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStor
 pub fn verify_eip1186<F: Field>(
     ctx: &mut Context<F>,
     chip: &EthStorageChip<F>,
-    input: EthStorageInput
+    input: CircuitInputStorageSubquery,
+    promise_caller: PromiseCaller<F>,
 ) {
 
         let gate = chip.gate();
     let range = chip.range();
     let safe = SafeTypeChip::new(range);
     // assign address (H160) as single field element
-    let addr = ctx.load_witness(encode_addr_to_field(&input.addr));
+    let addr = ctx.load_witness(encode_addr_to_field(&input.proof.addr));
     // should have already validated input so storage_pfs has length 1
-    let (slot, _value, mpt_proof) = input.storage_pfs[0].clone();
+    let (slot, _value, mpt_proof) = input.proof.storage_pfs[0].clone();
     // assign `slot` as `SafeBytes32`
     let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
     let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
@@ -114,7 +126,7 @@ pub fn verify_eip1186<F: Field>(
     //FIXME assert value is 1
    assert_eq!(value.lo().value().get_lower_32(), 1_u32);
 
-//    let block_number = ctx.load_witness(F::from(subquery.block_number));
+//    
 
 //    PayloadStorageSubquery {
 //        storage_witness,
@@ -126,7 +138,6 @@ pub fn verify_eip1186<F: Field>(
 //    }
 // }
 
-//TODO
 // let vt = extract_virtual_table(payload.iter().map(|p| p.output));
 // let lr: Vec<LogicalResult<F, Self::CompType>> =
 //     extract_logical_results(payload.iter().map(|p| p.output));
@@ -160,9 +171,10 @@ pub fn verify_eip1186<F: Field>(
 
 let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
 // for p in payload.iter() {
-    let block_number = p.output.subquery.block_number;
-    let addr = p.output.subquery.addr;
-    let storage_root = p.storage_root;
+    // let block_number = input.block_number;
+    let block_number = ctx.load_witness(F::from(input.block_number));
+    // let addr = p.output.subquery.addr;
+    // let storage_root = p.storage_root;
     let account_subquery =
         AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
     let promise_storage_root = promise_caller
