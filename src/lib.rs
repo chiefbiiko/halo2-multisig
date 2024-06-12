@@ -5,6 +5,7 @@ use halo2_base::{
     // utils::BigPrimeField,
     AssignedValue,
     Context,
+    safe_types::SafeTypeChip,
     // QuantumCell,
   };
   use axiom_eth::{
@@ -12,7 +13,7 @@ use halo2_base::{
     storage::circuit::EthStorageInput,
     providers::storage::json_to_mpt_input,
     storage::EthStorageChip,
-    utils::component::utils::create_hasher as create_poseidon_hasher
+    utils::{encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher}
 };
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
 
@@ -36,7 +37,6 @@ pub fn verify_eip1186<F: Field>(
     input: EthStorageInput
 ) {
 
-//////// TODO refactor :: this is just the circuit beginning
 // fn virtual_assign_phase0(
 //     &mut self,
 //     builder: &mut RlcCircuitBuilder<F>,
@@ -61,6 +61,91 @@ pub fn verify_eip1186<F: Field>(
 //     let payload = parallelize_core(pool, input.requests.clone(), |ctx, subquery| {
 //         handle_single_storage_subquery_phase0(ctx, &chip, &subquery)
 //     });
+
+    // let gate = chip.gate();
+    // let range = chip.range();
+    // let safe = SafeTypeChip::new(range);
+    // // assign address (H160) as single field element
+    // let addr = ctx.load_witness(encode_addr_to_field(&subquery.proof.addr));
+    // // should have already validated input so storage_pfs has length 1
+    // let (slot, _value, mpt_proof) = subquery.proof.storage_pfs[0].clone();
+    // // assign `slot` as `SafeBytes32`
+    // let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
+    // let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
+    // // convert slot to HiLo to save for later
+    // let slot = safe_bytes32_to_hi_lo(ctx, gate, &slot_bytes);
+
+    //     // assign storage proof
+    // let mpt_proof = mpt_proof.assign(ctx);
+    // // convert storageRoot from bytes to HiLo for later. `parse_storage_proof` will constrain these witnesses to be bytes
+    // let storage_root = unsafe_mpt_root_to_hi_lo(ctx, gate, &mpt_proof);
+    // // Check the storage MPT proof
+    // let storage_witness = chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
+    // // Left pad value to 32 bytes and convert to HiLo
+    // let value = {
+    //     let w = storage_witness.value_witness();
+    //     let inputs = w.field_cells.clone();
+    //     let len = w.field_len;
+    //     let var_len_bytes = SafeTypeChip::unsafe_to_var_len_bytes_vec(inputs, len, 32);
+    //     let fixed_bytes = var_len_bytes.left_pad_to_fixed(ctx, gate);
+    //     pack_bytes_to_hilo(ctx, gate, fixed_bytes.bytes())
+    // };
+    // // set slot value to uint256(0) when the slot does not exist in the storage trie
+    // let slot_is_empty = storage_witness.mpt_witness().slot_is_empty;
+    // let value = HiLo::from_hi_lo(value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)));
+
+//WIP handle_single_storage_subquery_phase0
+    // /// Assigns `subquery` to virtual cells and then handles the subquery to get result.
+    // /// **Assumes** that the storageHash is verified. Returns the assigned private witnesses of
+    // /// `(block_number, address, storage_hash)`, to be looked up against Account Component promise.
+    // pub fn handle_single_storage_subquery_phase0<F: Field>(
+    //     ctx: &mut Context<F>,
+    //     chip: &EthStorageChip<F>,
+    //     subquery: &CircuitInputStorageSubquery,
+    // ) -> PayloadStorageSubquery<F> {
+    //     let gate = chip.gate();
+    //     let range = chip.range();
+    //     let safe = SafeTypeChip::new(range);
+    //     // assign address (H160) as single field element
+    //     let addr = ctx.load_witness(encode_addr_to_field(&subquery.proof.addr));
+    //     // should have already validated input so storage_pfs has length 1
+    //     let (slot, _value, mpt_proof) = subquery.proof.storage_pfs[0].clone();
+    //     // assign `slot` as `SafeBytes32`
+    //     let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
+    //     let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
+    //     // convert slot to HiLo to save for later
+    //     let slot = safe_bytes32_to_hi_lo(ctx, gate, &slot_bytes);
+
+    //     // assign storage proof
+    //     let mpt_proof = mpt_proof.assign(ctx);
+    //     // convert storageRoot from bytes to HiLo for later. `parse_storage_proof` will constrain these witnesses to be bytes
+    //     let storage_root = unsafe_mpt_root_to_hi_lo(ctx, gate, &mpt_proof);
+    //     // Check the storage MPT proof
+    //     let storage_witness = chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
+    //     // Left pad value to 32 bytes and convert to HiLo
+    //     let value = {
+    //         let w = storage_witness.value_witness();
+    //         let inputs = w.field_cells.clone();
+    //         let len = w.field_len;
+    //         let var_len_bytes = SafeTypeChip::unsafe_to_var_len_bytes_vec(inputs, len, 32);
+    //         let fixed_bytes = var_len_bytes.left_pad_to_fixed(ctx, gate);
+    //         pack_bytes_to_hilo(ctx, gate, fixed_bytes.bytes())
+    //     };
+    //     // set slot value to uint256(0) when the slot does not exist in the storage trie
+    //     let slot_is_empty = storage_witness.mpt_witness().slot_is_empty;
+    //     let value = HiLo::from_hi_lo(value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)));
+
+    //     let block_number = ctx.load_witness(F::from(subquery.block_number));
+
+    //     PayloadStorageSubquery {
+    //         storage_witness,
+    //         storage_root,
+    //         output: AssignedStorageSubqueryResult {
+    //             subquery: AssignedStorageSubquery { block_number, addr, slot },
+    //             value,
+    //         },
+    //     }
+    // }
 
 //     let vt = extract_virtual_table(payload.iter().map(|p| p.output));
 //     let lr: Vec<LogicalResult<F, Self::CompType>> =
