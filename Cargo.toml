@@ -36,12 +36,12 @@ clap-num = "=1.0.2"
 
 # halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", tag = "v2023_02_02" }
 
-halo2-base = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom", "test-utils"] }
+# halo2-base = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom", "test-utils"] }
 # halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", tag = "v0.4.1-git", default-features = false, features = ["halo2-axiom", "test-utils"] }
 # halo2-ecc = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom"] }
-snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
+# snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
 axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers"] }
-# axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
+axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 # crypto
 rlp = "0.5.2"
@@ -89,7 +89,8 @@ blake3 = { version = "=1.5" }
 # halo2-axiom = ["axiom-eth/halo2-axiom"]
 # jemallocator = ["axiom-eth/jemallocator"]
 # keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
-scripts = ["snark-verifier-sdk"]
+
+# scripts = ["snark-verifier-sdk"]
 
 
 

@@ -289,6 +289,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 
 [[package]]
+name = "axiom-codec"
+version = "0.2.1"
+source = "git+https://github.com/axiom-crypto/axiom-eth.git?tag=v2.0.17#ad98fe4603258175b4209d6e7d251a728aff661d"
+dependencies = [
+ "anyhow",
+ "axiom-eth",
+ "byteorder",
+ "ethers-core",
+ "serde",
+ "serde_json",
+ "serde_repr",
+]
+
+[[package]]
 name = "axiom-eth"
 version = "0.4.3"
 source = "git+https://github.com/axiom-crypto/axiom-eth.git?tag=v2.0.17#ad98fe4603258175b4209d6e7d251a728aff661d"
@@ -301,7 +315,7 @@ dependencies = [
  "ethers-providers",
  "futures",
  "getset",
- "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "halo2-base",
  "hasher",
  "itertools 0.11.0",
  "lazy_static",
@@ -314,14 +328,43 @@ dependencies = [
  "rlp",
  "serde",
  "serde_json",
+ "serde_with",
  "sha3",
- "snark-verifier 0.1.7",
- "snark-verifier-sdk 0.1.7",
+ "snark-verifier",
+ "snark-verifier-sdk",
  "static_assertions",
  "thiserror",
  "tokio",
  "type-map",
  "zkevm-hashes",
+]
+
+[[package]]
+name = "axiom-query"
+version = "2.0.17"
+source = "git+https://github.com/axiom-crypto/axiom-eth.git?tag=v2.0.17#ad98fe4603258175b4209d6e7d251a728aff661d"
+dependencies = [
+ "anyhow",
+ "axiom-codec",
+ "axiom-eth",
+ "bincode",
+ "byteorder",
+ "cita_trie",
+ "downcast-rs",
+ "env_logger 0.10.2",
+ "ethers-core",
+ "getset",
+ "hasher",
+ "hex",
+ "itertools 0.11.0",
+ "lazy_static",
+ "log",
+ "rand",
+ "rand_core",
+ "rlp",
+ "serde",
+ "serde_json",
+ "serde_with",
 ]
 
 [[package]]
@@ -1385,35 +1428,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "halo2-base"
-version = "0.4.1"
-source = "git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon#08650ad70999b6eebd18d4dce0243b99e8cbcda9"
-dependencies = [
- "ark-std 0.3.0",
- "getset",
- "halo2-axiom",
- "itertools 0.11.0",
- "jemallocator",
- "log",
- "num-bigint",
- "num-integer",
- "num-traits",
- "poseidon-primitives",
- "rand",
- "rand_chacha",
- "rayon",
- "rustc-hash",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "halo2-ecc"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aeba4bd49c6eb05815a9809e749f1db525b26b17f5cafb40c5d9a9a4d483f541"
 dependencies = [
- "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "halo2-base",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -1424,26 +1444,6 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "test-case",
-]
-
-[[package]]
-name = "halo2-ecc"
-version = "0.4.1"
-source = "git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon#08650ad70999b6eebd18d4dce0243b99e8cbcda9"
-dependencies = [
- "halo2-base 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
- "itertools 0.11.0",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "rand_chacha",
- "rand_core",
- "rayon",
- "serde",
- "serde_json",
- "sha2",
  "test-case",
 ]
 
@@ -1454,6 +1454,7 @@ dependencies = [
  "anyhow",
  "ark-std 0.3.0",
  "axiom-eth",
+ "axiom-query",
  "bincode",
  "blake3",
  "byteorder",
@@ -1467,7 +1468,6 @@ dependencies = [
  "ethers-providers",
  "futures",
  "getset",
- "halo2-base 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
  "hasher",
  "hex",
  "itertools 0.11.0",
@@ -1483,7 +1483,6 @@ dependencies = [
  "serde_json",
  "serde_with",
  "serde_yaml",
- "snark-verifier-sdk 0.1.8",
  "test-case",
  "test-log",
  "tokio",
@@ -1947,26 +1946,6 @@ name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
-
-[[package]]
-name = "jemalloc-sys"
-version = "0.5.4+5.3.0-patched"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac6c1946e1cea1788cbfde01c993b52a10e2da07f4bac608228d1bed20bfebf2"
-dependencies = [
- "cc",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0de374a9f8e63150e6f5e8a60cc14c668226d7a347d8aee1a45766e3c4dd3bc"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
 
 [[package]]
 name = "js-sys"
@@ -2805,9 +2784,9 @@ dependencies = [
 
 [[package]]
 name = "ruint"
-version = "1.12.1"
+version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f308135fef9fc398342da5472ce7c484529df23743fb7c734e0f3d472971e62"
+checksum = "95294d6e3a6192f3aabf91c38f56505a625aa495533442744185a36d75a790c4"
 dependencies = [
  "alloy-rlp",
  "ark-ff 0.3.0",
@@ -2815,7 +2794,6 @@ dependencies = [
  "bytes",
  "fastrlp",
  "num-bigint",
- "num-traits",
  "parity-scale-codec",
  "primitive-types",
  "proptest",
@@ -3100,6 +3078,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_repr"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c64451ba24fc7a6a2d60fc75dd9c83c90903b19028d4eff35e88fc1e86564e9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.66",
+]
+
+[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3238,26 +3227,8 @@ version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf385d9fa86937eb98c6f4f1632c42693b8fadaee19c220a60041cd1b52d2a"
 dependencies = [
- "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "halo2-ecc 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "hex",
- "itertools 0.11.0",
- "lazy_static",
- "num-bigint",
- "num-integer",
- "num-traits",
- "pairing",
- "rand",
- "serde",
-]
-
-[[package]]
-name = "snark-verifier"
-version = "0.1.8"
-source = "git+https://github.com/shreyas-londhe/snark-verifier.git#8b848646637ebd8045219943acf6e3fc059bab1e"
-dependencies = [
- "halo2-base 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
- "halo2-ecc 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
+ "halo2-base",
+ "halo2-ecc",
  "hex",
  "itertools 0.11.0",
  "lazy_static",
@@ -3278,31 +3249,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "031e8a6ef6ffd43e525597b7f0d41ab9a0db46ee518c64e0354130a758b3ce23"
 dependencies = [
  "bincode",
- "getset",
- "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "hex",
- "itertools 0.11.0",
- "lazy_static",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "rand_chacha",
- "serde",
- "serde_json",
- "snark-verifier 0.1.7",
-]
-
-[[package]]
-name = "snark-verifier-sdk"
-version = "0.1.8"
-source = "git+https://github.com/shreyas-londhe/snark-verifier.git#8b848646637ebd8045219943acf6e3fc059bab1e"
-dependencies = [
- "ark-std 0.3.0",
- "bincode",
  "ethereum-types",
  "getset",
- "halo2-base 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
+ "halo2-base",
  "hex",
  "itertools 0.11.0",
  "lazy_static",
@@ -3313,7 +3262,7 @@ dependencies = [
  "rand_chacha",
  "serde",
  "serde_json",
- "snark-verifier 0.1.8",
+ "snark-verifier",
 ]
 
 [[package]]
@@ -4379,7 +4328,7 @@ dependencies = [
  "array-init",
  "ethers-core",
  "getset",
- "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "halo2-base",
  "itertools 0.11.0",
  "lazy_static",
  "log",
@@ -4388,6 +4337,6 @@ dependencies = [
  "rayon",
  "serde",
  "sha3",
- "snark-verifier-sdk 0.1.7",
+ "snark-verifier-sdk",
  "type-map",
 ]
