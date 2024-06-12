@@ -7,75 +7,33 @@ use halo2_base::{
     Context,
     // QuantumCell,
   };
-  use halo2_ecc::bigint::ProperCrtUint;
-  use axiom_eth::{Field,storage::EthStorageChip, utils::component::utils::create_hasher as create_poseidon_hasher};
+  use axiom_eth::{
+    Field,
+    storage::circuit::EthStorageInput,
+    providers::storage::json_to_mpt_input,
+    storage::EthStorageChip,
+    utils::component::utils::create_hasher as create_poseidon_hasher
+};
+use ethers_core::types::{EIP1186ProofResponse, Block, H256};
 
-////////
-// /// Circuit input for a single Storage subquery.
-// #[derive(Clone, Debug, Serialize, Deserialize)]
-// pub struct CircuitInputStorageSubquery {
-//     /// The block number to access the storage state at.
-//     pub block_number: u64,
-//     /// Storage proof formatted as MPT input. It will contain the account address.
-//     /// ### Warning
-//     /// `proof.acct_pf` will be empty and `proof` will **not** have state_root set.
-//     pub proof: EthStorageInput,
-// }
+/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
+const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
+/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
+const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 
-// #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-// pub struct EthStorageInput {
-//     pub addr: Address,
-//     pub acct_pf: MPTInput,
-//     pub acct_state: Vec<Vec<u8>>,
-//     /// A vector of (slot, value, proof) tuples
-//     pub storage_pfs: Vec<(U256, U256, MPTInput)>,
-// }
+// const STATE_ROOT_INDEX: usize = 3;
 
-/// Does **not** perform any range checks on witnesses to check if they are actually bytes.
-/// This should be done in the `parse_mpt_inclusion_phase0` function
-
-// #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
-// /// The pre-assigned inputs for the MPT proof
-// pub struct MPTInput {
-//     // claim specification: (path, value)
-//     /// A Merkle-Patricia Trie is a mapping `path => value`
-//     ///
-//     /// As an example, the MPT state trie of Ethereum has
-//     /// `path = keccak256(address) => value = rlp(account)`
-//     pub path: PathBytes,
-//     pub value: Vec<u8>,
-//     pub root_hash: H256,
-//     /// Inclusion proofs will always end in a terminal node: we extract this terminal node in cases where it was originally embedded inside the last branch node.
-//     pub proof: Vec<Vec<u8>>,
-//     pub slot_is_empty: bool,
-//     pub value_max_byte_len: usize,
-//     pub max_depth: usize,
-//     pub max_key_byte_len: usize,
-//     pub key_byte_len: Option<usize>,
-// }
-////////
-
-//??? how do we go from rpc1186proofresponse to MPTInput?
-
-//WIP
-#[derive(Clone, Debug)]
-pub struct Eip1186Input<F: Field> {
-    pub safe_address: ProperCrtUint<F>,      // Safe address
-    pub msg_hash: ProperCrtUint<F>,          // Custom msg hash
-    pub state_root: ProperCrtUint<F>,        // eth_getBlockBy*::response.stateRoot
-    pub storage_root: ProperCrtUint<F>,      // eth_getProof::response.storageHash
-    pub state_trie_key: ProperCrtUint<F>,    // keccak256(safe)
-    pub storage_trie_key: ProperCrtUint<F>,  // keccak256(msg_hash + uint256(7))
-    pub account_proof: Vec<Vec<AssignedValue<F>>>, // list of bytes // eth_getProof::response.accountProof
-    pub storage_proof: Vec<Vec<AssignedValue<F>>>, // list of bytes // eth_getProof::response.storageProof.proof
-    pub header_rlp: Vec<AssignedValue<F>>, // bytes // RLP-encoded header
+pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
+    let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, 0);
+    input.acct_pf.root_hash = block.state_root;
+    input
 }
 
 //WIP
 pub fn verify_eip1186<F: Field>(
     ctx: &mut Context<F>,
     chip: &EthStorageChip<F>,
-    input: Eip1186Input<F>
+    input: EthStorageInput
 ) {
 
 //////// TODO refactor :: this is just the circuit beginning

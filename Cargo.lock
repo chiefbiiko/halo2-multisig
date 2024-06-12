@@ -298,6 +298,8 @@ dependencies = [
  "cita_trie",
  "env_logger 0.10.2",
  "ethers-core",
+ "ethers-providers",
+ "futures",
  "getset",
  "halo2-base 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hasher",
@@ -317,6 +319,7 @@ dependencies = [
  "snark-verifier-sdk 0.1.7",
  "static_assertions",
  "thiserror",
+ "tokio",
  "type-map",
  "zkevm-hashes",
 ]
@@ -1465,7 +1468,6 @@ dependencies = [
  "futures",
  "getset",
  "halo2-base 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
- "halo2-ecc 0.4.1 (git+https://github.com/shreyas-londhe/halo2-lib.git?branch=feat/secp256k1-hash2curve-poseidon)",
  "hasher",
  "hex",
  "itertools 0.11.0",
@@ -2173,6 +2175,16 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
  "libm",
+]
+
+[[package]]
+name = "num_cpus"
+version = "1.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4161fcb6d602d4d2081af7c3a45852d875a03dd337a6bfdd6e06407b61342a43"
+dependencies = [
+ "hermit-abi",
+ "libc",
 ]
 
 [[package]]
@@ -3620,6 +3632,7 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
+ "num_cpus",
  "pin-project-lite",
  "socket2",
  "tokio-macros",
