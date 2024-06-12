@@ -38,7 +38,7 @@ const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 
 // const STATE_ROOT_INDEX: usize = 3;
 
-pub fn create_ctx_and_chip<'chip, F: Field>() -> (&'chip Context<F>, &'chip EthStorageChip<'chip, F>) {
+pub fn create_ctx_and_chip<'chip, F: Field>() -> (Box<Context<F>>, Box<EthStorageChip<'chip, F>>) {
         // preamble: to be removed
         //RangeChip PromiseCaller
 
@@ -64,12 +64,12 @@ pub fn create_ctx_and_chip<'chip, F: Field>() -> (&'chip Context<F>, &'chip EthS
     // TODO: automatically derive a dummy input from params.
     // let input = self.input.as_ref().unwrap();
 
-    let mpt = MPTChip::new(rlp, &keccak);
-    let chip = EthStorageChip::new(&mpt, None);
+    let mpt = Box::new(MPTChip::new(rlp, &keccak));
+    let chip = Box::new(EthStorageChip::new(&mpt, None));
 
-    let ctx = builder.main(0);
+    let ctx = Box::new((*builder.main(0)).clone());
     // give 'chip lifetime to chip, mpt, keccak, builder
-    (ctx, &chip)
+    (ctx, chip)
 }
 
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
