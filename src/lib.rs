@@ -10,7 +10,7 @@
 //     // QuantumCell,
 //   };
   use axiom_eth::{
-    halo2_base::{Context, gates::{RangeChip,circuit::builder::BaseCircuitBuilder}},
+    halo2_base::{Context, gates::{RangeChip,circuit::builder::BaseCircuitBuilder}, safe_types::SafeTypeChip},
     keccak::{KeccakChip, types::ComponentTypeKeccak},
     rlp::RlpChip,
     mpt::MPTChip,
