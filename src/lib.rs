@@ -10,15 +10,17 @@
 //     // QuantumCell,
 //   };
   use axiom_eth::{
-    halo2_base::{AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}, safe_types::SafeTypeChip},
+    halo2_base::{
+        safe_types::{SafeAddress, SafeBytes32, SafeTypeChip, SafeType, FixLenBytes},
+        AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}},
     keccak::{KeccakChip, types::ComponentTypeKeccak},
-    rlp::RlpChip,
-    mpt::MPTChip,
+    rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
+    mpt::{MPTChip, MPTProofWitness},
     Field,
     // rlc::circuit::builder::RlcCircuitBuilder,
     storage::circuit::EthStorageInput,
     providers::storage::json_to_mpt_input,
-    storage::EthStorageChip,
+    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES },
     utils::{
         constrain_vec_equal,
         hilo::HiLo,
@@ -29,6 +31,7 @@
 };
 use axiom_query::{utils::codec::AssignedAccountSubquery, components::subqueries::account::types::{FieldAccountSubqueryCall, ComponentTypeAccountSubquery}};
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
+use getset::Getters;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
@@ -78,6 +81,35 @@ pub struct CircuitInputStorageSubquery {
     pub proof: EthStorageInput,
 }
 
+/// Stores storage slot information as well as a proof of inclusion to be verified in parse_storage_phase1. Is returned
+/// by `parse_storage_phase0`.
+#[derive(Clone, Debug, Getters)]
+pub struct EthStorageWitness<F: Field> {
+    pub slot: SafeBytes32<F>,
+    #[getset(get = "pub")]
+    pub(crate) value_witness: RlpFieldWitness<F>,
+    #[getset(get = "pub")]
+    pub(crate) mpt_witness: MPTProofWitness<F>,
+}
+
+/// Stores Account information to be used in later functions. Is returned by `parse_account_proof_phase0`.
+#[derive(Clone, Debug, Getters)]
+pub struct EthAccountWitness<F: Field> {
+    pub address: SafeAddress<F>,
+    #[getset(get = "pub")]
+    pub(crate) array_witness: RlpArrayWitness<F>,
+    #[getset(get = "pub")]
+    pub(crate) mpt_witness: MPTProofWitness<F>,
+}
+
+/// SafeType for byte (8 bits).
+///
+/// This is a separate struct from `CompactSafeType` with the same behavior. Because
+/// we know only one [`AssignedValue`] is needed to hold the boolean value, we avoid
+/// using `CompactSafeType` to avoid the additional heap allocation from a length 1 vector.
+#[derive(Clone, Copy, Debug)]
+pub struct SafeByte<F: Field>(pub AssignedValue<F>);
+
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
     input.acct_pf.root_hash = block.state_root;
@@ -98,7 +130,8 @@ pub fn verify_eip1186<F: Field>(
     // assign address (H160) as single field element
     let addr = ctx.load_witness(encode_addr_to_field(&input.proof.addr));
     // should have already validated input so storage_pfs has length 1
-    let (slot, _value, mpt_proof) = input.proof.storage_pfs[0].clone();
+    let (slot, _value, storage_mpt_proof) = input.proof.storage_pfs[0].clone();
+    let account_mpt_proof = input.proof.acct_pf.clone();
     // assign `slot` as `SafeBytes32`
     let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
     let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
@@ -106,11 +139,23 @@ pub fn verify_eip1186<F: Field>(
     let slot = safe_bytes32_to_hi_lo(ctx, gate, &slot_bytes);
 
     // assign storage proof
-    let mpt_proof = mpt_proof.assign(ctx);
+    let storage_mpt_proof = storage_mpt_proof.assign(ctx);
     // convert storageRoot from bytes to HiLo for later. `parse_storage_proof` will constrain these witnesses to be bytes
-    let storage_root = unsafe_mpt_root_to_hi_lo(ctx, gate, &mpt_proof);
+    let storage_root = unsafe_mpt_root_to_hi_lo(ctx, gate, &storage_mpt_proof);
+
+    //START parse_storage_proof_phase0()
     // Check the storage MPT proof
-    let storage_witness = chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
+    // let storage_witness = chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
+    let storage_witness = {
+        // parse slot value
+        let value_witness =
+        chip.rlp().decompose_rlp_field_phase0(ctx, storage_mpt_proof.value_bytes.clone(), 32);
+        // check MPT inclusion
+        let mpt_witness = chip.mpt.parse_mpt_inclusion_phase0(ctx, storage_mpt_proof);
+        EthStorageWitness { slot: slot_bytes, value_witness, mpt_witness }
+    };
+    //END parse_storage_proof_phase0()
+
     // Left pad value to 32 bytes and convert to HiLo
     let value = {
         let w = storage_witness.value_witness();
@@ -126,6 +171,25 @@ pub fn verify_eip1186<F: Field>(
     //FIXME assert value is 1
    assert_eq!(value.lo().value().get_lower_32(), 1_u32);
 
+    //START parse_account_proof_phase0()
+    let account_witness = {
+        // assign account proof
+        let account_mpt_proof = account_mpt_proof.assign(ctx);
+        // parse value RLP([nonce, balance, storage_root, code_hash])
+        let array_witness = chip.rlp().decompose_rlp_array_phase0(
+            ctx,
+            account_mpt_proof.value_bytes.clone(),
+            &ACCOUNT_STATE_FIELDS_MAX_BYTES,
+            false,
+        );
+        // Check MPT inclusion for:
+        // keccak(addr) => RLP([nonce, balance, storage_root, code_hash])
+        let mpt_witness = chip.mpt.parse_mpt_inclusion_phase0(ctx, account_mpt_proof);
+        //FIXME just proceed to phase1 storage and account proof handling then see wheteher we can just circumvent safetype address vahalla
+        EthAccountWitness { address: SafeType::from(SafeTypeChip::raw_to_fix_len_bytes_vec::<20>::(addr)), array_witness, mpt_witness }
+    };
+    //END parse_account_proof_phase0()
+   
 //    
 
 //    PayloadStorageSubquery {
