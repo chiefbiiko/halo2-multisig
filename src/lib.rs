@@ -24,7 +24,7 @@ const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 // const STATE_ROOT_INDEX: usize = 3;
 
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
-    let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, 0);
+    let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
     input.acct_pf.root_hash = block.state_root;
     input
 }
