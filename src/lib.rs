@@ -45,8 +45,8 @@ const WITNESS_GEN_ONLY: bool = false;
 
 // const STATE_ROOT_INDEX: usize = 3;
 
-// pub fn create_ctx_and_chip<'chip, F: Field>() -> (&'chip mut Context<F>, EthStorageChip<'chip, F>) {
-//     let mut builder: BaseCircuitBuilder<F> = BaseCircuitBuilder::new(WITNESS_GEN_ONLY).use_k(K);
+// pub fn create_ctx_and_chip<'chip, F: Field>() -> ( Box<Context<F>>, EthStorageChip<'chip, F>) {
+//     let mut builder:  Box<BaseCircuitBuilder<F>> = Box::new(BaseCircuitBuilder::new(WITNESS_GEN_ONLY).use_k(K));
 //     builder.set_lookup_bits(LOOKUP_BITS);
 //     let promise_collector = Arc::new(Mutex::new(PromiseCollector::new(vec![
 //         ComponentTypeKeccak::<F>::get_type_id(),
@@ -57,7 +57,7 @@ const WITNESS_GEN_ONLY: bool = false;
 //     let rlp = RlpChip::new(&range, None);
 //     let mpt = MPTChip::new(rlp, &keccak);
 //     let chip = EthStorageChip::new(&mpt, None);
-//     let ctx = builder.main(0);
+//     let ctx: Box<Context<F>> = Box::new(builder.main(0).clone());
 //     (ctx, chip)
 // }
 
