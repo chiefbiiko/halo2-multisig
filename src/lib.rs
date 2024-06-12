@@ -10,7 +10,7 @@
 //     // QuantumCell,
 //   };
   use axiom_eth::{
-    halo2_base::{Context, gates::circuit::builder::BaseCircuitBuilder},
+    halo2_base::{Context, gates::{RangeChip,circuit::builder::BaseCircuitBuilder}},
     keccak::{KeccakChip, types::ComponentTypeKeccak},
     rlp::RlpChip,
     mpt::MPTChip,
@@ -21,7 +21,8 @@
     storage::EthStorageChip,
     utils::{
         component::{ComponentType, promise_collector::{PromiseCaller, PromiseCollector}},
-        encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher}
+        encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
+        zkevm_hashes::util::eth_types::ToBigEndian,
 };
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
 
@@ -31,6 +32,12 @@ use std::sync::{Arc, Mutex};
 const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 const STORAGE_PROOF_MAX_DEPTH: usize = 13;
+// your circuit will have 2^k rows
+const K: usize = 10;
+// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`
+const LOOKUP_BITS: usize = K - 1;
+// constraints are ignored if set to true
+const WITNESS_GEN_ONLY: bool = false;
 
 /// This means we can concatenate arrays with individual max length 2^32.
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
@@ -38,39 +45,21 @@ const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 
 // const STATE_ROOT_INDEX: usize = 3;
 
-pub fn create_ctx_and_chip<'chip, F: Field>() -> (Box<Context<F>>, Box<EthStorageChip<'chip, F>>) {
-        // preamble: to be removed
-        //RangeChip PromiseCaller
-
-    let k = 10; // your circuit will have 2^k rows
-    let witness_gen_only = false; // constraints are ignored if set to true
-    let mut builder = BaseCircuitBuilder::new(witness_gen_only).use_k(k);
-    // If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`
-    let lookup_bits = k - 1;
-    builder.set_lookup_bits(lookup_bits);
-
-    let promise_collector = Arc::new(Mutex::new(PromiseCollector::new(vec![
-        ComponentTypeKeccak::<F>::get_type_id(),
-    ])));
-
-    let keccak =
-        KeccakChip::new_with_promise_collector(builder.range_chip(), PromiseCaller::new(promise_collector));
-    let range_chip = keccak.range();
-    let rlp = RlpChip::new(range_chip, None);
-    // let mut poseidon = create_hasher();
-    // poseidon.initialize_consts(builder.base.main(0), keccak.gate());
-
-    // Assumption: we already have input when calling this function.
-    // TODO: automatically derive a dummy input from params.
-    // let input = self.input.as_ref().unwrap();
-
-    let mpt = Box::new(MPTChip::new(rlp, &keccak));
-    let chip = Box::new(EthStorageChip::new(&mpt, None));
-
-    let ctx = Box::new((*builder.main(0)).clone());
-    // give 'chip lifetime to chip, mpt, keccak, builder
-    (ctx, chip)
-}
+// pub fn create_ctx_and_chip<'chip, F: Field>() -> (&'chip mut Context<F>, EthStorageChip<'chip, F>) {
+//     let mut builder: BaseCircuitBuilder<F> = BaseCircuitBuilder::new(WITNESS_GEN_ONLY).use_k(K);
+//     builder.set_lookup_bits(LOOKUP_BITS);
+//     let promise_collector = Arc::new(Mutex::new(PromiseCollector::new(vec![
+//         ComponentTypeKeccak::<F>::get_type_id(),
+//     ])));
+//     let range = RangeChip::new(LOOKUP_BITS, builder.lookup_manager().clone());
+//     let keccak =
+//         KeccakChip::new_with_promise_collector(range.clone(), PromiseCaller::new(promise_collector));
+//     let rlp = RlpChip::new(&range, None);
+//     let mpt = MPTChip::new(rlp, &keccak);
+//     let chip = EthStorageChip::new(&mpt, None);
+//     let ctx = builder.main(0);
+//     (ctx, chip)
+// }
 
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
@@ -84,6 +73,19 @@ pub fn verify_eip1186<F: Field>(
     chip: &EthStorageChip<F>,
     input: EthStorageInput
 ) {
+
+        let gate = chip.gate();
+    let range = chip.range();
+    let safe = SafeTypeChip::new(range);
+    // assign address (H160) as single field element
+    let addr = ctx.load_witness(encode_addr_to_field(&input.addr));
+    // should have already validated input so storage_pfs has length 1
+    let (slot, _value, mpt_proof) = input.storage_pfs[0].clone();
+    // assign `slot` as `SafeBytes32`
+    let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
+    let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
+    // convert slot to HiLo to save for later
+    let slot = safe_bytes32_to_hi_lo(ctx, gate, &slot_bytes);
 
 // fn virtual_assign_phase0(
 //     &mut self,
@@ -110,18 +112,7 @@ pub fn verify_eip1186<F: Field>(
 //         handle_single_storage_subquery_phase0(ctx, &chip, &subquery)
 //     });
 
-    // let gate = chip.gate();
-    // let range = chip.range();
-    // let safe = SafeTypeChip::new(range);
-    // // assign address (H160) as single field element
-    // let addr = ctx.load_witness(encode_addr_to_field(&subquery.proof.addr));
-    // // should have already validated input so storage_pfs has length 1
-    // let (slot, _value, mpt_proof) = subquery.proof.storage_pfs[0].clone();
-    // // assign `slot` as `SafeBytes32`
-    // let unsafe_slot = unsafe_bytes_to_assigned(ctx, &slot.to_be_bytes());
-    // let slot_bytes = safe.raw_bytes_to(ctx, unsafe_slot);
-    // // convert slot to HiLo to save for later
-    // let slot = safe_bytes32_to_hi_lo(ctx, gate, &slot_bytes);
+//TBC
 
     //     // assign storage proof
     // let mpt_proof = mpt_proof.assign(ctx);
