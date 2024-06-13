@@ -28,6 +28,8 @@ rand_core = { version = "0.6", default-features = false, features = ["getrandom"
 clap = { version = "=4.4.7", features = ["derive"], optional = true }
 clap-num = "=1.0.2"
 
+tiny-keccak = { version = "2.0.2", features = ["keccak"] }
+
 # halo2
 # halo2, features turned on by axiom-eth
 # axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["providers", "aggregation", "evm"] }
@@ -46,6 +48,7 @@ axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-et
 # crypto
 rlp = "0.5.2"
 ethers-core = { version = "=2.0.14", features = ["optimism"] }
+ethers-providers = { version = "2.0.14" }
 # mpt implementation
 hasher = { version = "=0.1", features = ["hash-keccak"] }
 cita_trie = "=5.0.0"
@@ -71,9 +74,12 @@ rand_chacha = "0.3.1"
 tokio = { version = "1.33", features = ["macros"] }
 reqwest = { version = "0.11", features = ["json"] }
 # generating circuit inputs from blockchain
-ethers-providers = { version = "2.0.14" }
+# ethers-providers = { version = "2.0.14" }
 futures = { version = "0.3" }
 blake3 = { version = "=1.5" }
+
+anyhow = "1.0.81"
+const-hex = "1.11.1"
 
 # halo2-scaffold = { branch = "feat/0.3.0", git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
 # halo2-scaffold = { path = "../halo2-scaffold" }

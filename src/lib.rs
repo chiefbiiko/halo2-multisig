@@ -31,14 +31,23 @@
 };
 use axiom_query::{utils::codec::AssignedAccountSubquery, components::subqueries::account::types::{FieldAccountSubqueryCall, ComponentTypeAccountSubquery}};
 use ethers_core::types::{EIP1186ProofResponse, Block, H256};
-use getset::Getters;
-use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
+// use getset::Getters;
+// use serde::{Deserialize, Serialize};
+// use std::sync::{Arc, Mutex};
 
-/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
-const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
-/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
-const STORAGE_PROOF_MAX_DEPTH: usize = 13;
+#[cfg(test)]
+mod test;
+
+mod utils;
+use utils::json_to_input;
+
+mod types;
+use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
+
+// /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
+// const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
+// /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
+// const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 /// The circuit will have 2^k rows.
 const K: usize = 10;
 /// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
@@ -70,43 +79,43 @@ const STORAGE_ROOT_INDEX: usize = 2;
 //     (ctx, chip)
 // }
 
-/// Circuit input for a single Storage subquery.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CircuitInputStorageSubquery {
-    /// The block number to access the storage state at.
-    pub block_number: u64,
-    /// Storage proof formatted as MPT input. It will contain the account address.
-    /// ### Warning
-    /// `proof.acct_pf` will be empty and `proof` will **not** have state_root set.
-    pub proof: EthStorageInput,
-}
+// /// Circuit input for a single Storage subquery.
+// #[derive(Clone, Debug, Serialize, Deserialize)]
+// pub struct CircuitInputStorageSubquery {
+//     /// The block number to access the storage state at.
+//     pub block_number: u64,
+//     /// Storage proof formatted as MPT input. It will contain the account address.
+//     /// ### Warning
+//     /// `proof.acct_pf` will be empty and `proof` will **not** have state_root set.
+//     pub proof: EthStorageInput,
+// }
 
-/// Stores storage slot information as well as a proof of inclusion to be verified in parse_storage_phase1. Is returned
-/// by `parse_storage_phase0`.
-#[derive(Clone, Debug, Getters)]
-pub struct EthStorageWitness<F: Field> {
-    pub slot: SafeBytes32<F>,
-    #[getset(get = "pub")]
-    pub(crate) value_witness: RlpFieldWitness<F>,
-    #[getset(get = "pub")]
-    pub(crate) mpt_witness: MPTProofWitness<F>,
-}
+// /// Stores storage slot information as well as a proof of inclusion to be verified in parse_storage_phase1. Is returned
+// /// by `parse_storage_phase0`.
+// #[derive(Clone, Debug, Getters)]
+// pub struct EthStorageWitness<F: Field> {
+//     pub slot: SafeBytes32<F>,
+//     #[getset(get = "pub")]
+//     pub(crate) value_witness: RlpFieldWitness<F>,
+//     #[getset(get = "pub")]
+//     pub(crate) mpt_witness: MPTProofWitness<F>,
+// }
 
-/// Stores Account information to be used in later functions. Is returned by `parse_account_proof_phase0`.
-#[derive(Clone, Debug, Getters)]
-pub struct EthAccountWitness<F: Field> {
-    pub address: SafeAddress<F>,
-    #[getset(get = "pub")]
-    pub(crate) array_witness: RlpArrayWitness<F>,
-    #[getset(get = "pub")]
-    pub(crate) mpt_witness: MPTProofWitness<F>,
-}
+// /// Stores Account information to be used in later functions. Is returned by `parse_account_proof_phase0`.
+// #[derive(Clone, Debug, Getters)]
+// pub struct EthAccountWitness<F: Field> {
+//     pub address: SafeAddress<F>,
+//     #[getset(get = "pub")]
+//     pub(crate) array_witness: RlpArrayWitness<F>,
+//     #[getset(get = "pub")]
+//     pub(crate) mpt_witness: MPTProofWitness<F>,
+// }
 
-pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
-    let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
-    input.acct_pf.root_hash = block.state_root;
-    input
-}
+// pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
+//     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
+//     input.acct_pf.root_hash = block.state_root;
+//     input
+// }
 
 //WIP
 pub fn verify_eip1186<F: Field>(

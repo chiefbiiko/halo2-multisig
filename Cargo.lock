@@ -1461,6 +1461,7 @@ dependencies = [
  "cita_trie",
  "clap",
  "clap-num",
+ "const-hex",
  "downcast-rs",
  "enum_dispatch",
  "env_logger 0.10.2",
@@ -1485,6 +1486,7 @@ dependencies = [
  "serde_yaml",
  "test-case",
  "test-log",
+ "tiny-keccak",
  "tokio",
 ]
 
