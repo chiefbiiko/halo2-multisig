@@ -17,8 +17,8 @@
     rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
     mpt::{MPTChip, MPTProofWitness},
     Field,
-    // rlc::circuit::builder::RlcCircuitBuilder,
-    storage::circuit::EthStorageInput,
+    rlc::circuit::builder::RlcCircuitBuilder,
+    storage::{circuit::EthStorageInput, EthStorageTrace, EthAccountTrace},
     providers::storage::json_to_mpt_input,
     storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES },
     utils::{
@@ -113,6 +113,7 @@ pub fn verify_eip1186<F: Field>(
     ctx: &mut Context<F>,
     chip: &EthStorageChip<F>,
     input: CircuitInputStorageSubquery,
+    mut builder: RlcCircuitBuilder<F>,
     promise_caller: PromiseCaller<F>,
 ) {
 
@@ -164,6 +165,7 @@ pub fn verify_eip1186<F: Field>(
    let lo_bytes: [u8; 16] = value.lo().value().to_bytes_le().try_into().expect("lo_bytes");
    let hi_bytes: [u8; 16] = value.hi().value().to_bytes_le().try_into().expect("hi_bytes");
    assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);
+   //ctx.constrain_equal
 
    let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
    // for p in payload.iter() {
@@ -228,16 +230,38 @@ pub fn verify_eip1186<F: Field>(
 //    chip.parse_storage_proof_phase1(ctx, payload.storage_witness);
 // }
 
-    // //TODO parse_storage_proof_phase1()
-    //    // Comments below just to log what load_rlc_cache calls are done in the internal functions:
-    //     // load_rlc_cache bit_length(2*mpt_witness.key_byte_len)
-    //     chip.mpt.parse_mpt_inclusion_phase1((ctx_gate, ctx_rlc), storage_witness.mpt_witness);
-    //     // load rlc_cache bit_length(value_witness.rlp_field.len())
-    //     let value_trace =
-    //         self.rlp().decompose_rlp_field_phase1((ctx_gate, ctx_rlc), witness.value_witness);
-    //     let value_trace = value_trace.field_trace;
-    //     debug_assert_eq!(value_trace.max_len, 32);
-    //     EthStorageTrace { value_trace }
+    //START parse_storage_proof_phase1()
+    let storage_trace = {
+        // Comments below just to log what load_rlc_cache calls are done in the internal functions:
+        // load_rlc_cache bit_length(2*mpt_witness.key_byte_len)
+        chip.mpt.parse_mpt_inclusion_phase1(builder.rlc_ctx_pair(), storage_witness.mpt_witness);
+        // load rlc_cache bit_length(value_witness.rlp_field.len())
+        let value_trace =
+            chip.rlp().decompose_rlp_field_phase1(builder.rlc_ctx_pair(), storage_witness.value_witness);
+        let value_trace = value_trace.field_trace;
+        debug_assert_eq!(value_trace.max_len, 32);
+        EthStorageTrace { value_trace }
+    };
+    //END parse_storage_proof_phase1()
+
+
+    //START parse_account_proof_phase1()
+    let account_trace = {
+                // Comments below just to log what load_rlc_cache calls are done in the internal functions:
+        // load_rlc_cache bit_length(2*mpt_witness.key_byte_len)
+        chip.mpt.parse_mpt_inclusion_phase1(builder.rlc_ctx_pair(), account_witness.mpt_witness);
+        // load rlc_cache bit_length(array_witness.rlp_array.len())
+        let array_trace: [_; 4] = chip
+            .rlp()
+            .decompose_rlp_array_phase1(builder.rlc_ctx_pair(), account_witness.array_witness, false)
+            .field_trace
+            .try_into()
+            .unwrap();
+        let [nonce_trace, balance_trace, storage_root_trace, code_hash_trace] =
+            array_trace.map(|trace| trace.field_trace);
+        EthAccountTrace { nonce_trace, balance_trace, storage_root_trace, code_hash_trace }
+    };
+    //END parse_account_proof_phase1()
 
 
 
