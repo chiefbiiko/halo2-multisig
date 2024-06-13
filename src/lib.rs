@@ -168,8 +168,10 @@ pub fn verify_eip1186<F: Field>(
     // set slot value to uint256(0) when the slot does not exist in the storage trie
     // let slot_is_empty = storage_witness.mpt_witness().slot_is_empty;
     // let value = HiLo::from_hi_lo(value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)));
-    //FIXME assert value is 1
-   assert_eq!(value.lo().value().get_lower_32(), 1_u32);
+    // assert value is 1 aka Safe signed msg
+   let lo_bytes: [u8; 16] = value.lo().value().to_bytes_le().try_into().expect("lo_bytes");
+   let hi_bytes: [u8; 16] = value.hi().value().to_bytes_le().try_into().expect("hi_bytes");
+   assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);
 
     //START parse_account_proof_phase0()
     let account_witness = {
