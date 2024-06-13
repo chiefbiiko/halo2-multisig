@@ -33,7 +33,7 @@ use axiom_eth::{
   use crate::{verify_eip1186,utils::test_fixture};
 
   #[tokio::test]
-  async fn test_plume_verify() {
+  async fn test_verify_eip1186() {
     // // Inputs
     // let msg_str =
     //   b"vulputate ut pharetra tis amet aliquam id diam maecenas ultricies mi eget mauris pharetra et adasdds";

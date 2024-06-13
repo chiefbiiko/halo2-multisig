@@ -35,13 +35,15 @@ use ethers_core::types::{EIP1186ProofResponse, Block, H256};
 // use serde::{Deserialize, Serialize};
 // use std::sync::{Arc, Mutex};
 
+mod constants;
+mod types;
+mod utils;
 #[cfg(test)]
 mod test;
 
-mod utils;
-use utils::json_to_input;
+// use utils::json_to_input;
 
-mod types;
+use constants::*;
 use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 
 // /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
@@ -49,13 +51,13 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 // /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 // const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 /// The circuit will have 2^k rows.
-const K: usize = 10;
-/// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
-const LOOKUP_BITS: usize = K - 1;
-/// Constraints are ignored if set to true.
-const WITNESS_GEN_ONLY: bool = false;
+// const K: usize = 10;
+// /// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
+// const LOOKUP_BITS: usize = K - 1;
+// /// Constraints are ignored if set to true.
+// const WITNESS_GEN_ONLY: bool = false;
 /// Index of the storage root in an account.
-const STORAGE_ROOT_INDEX: usize = 2;
+// const STORAGE_ROOT_INDEX: usize = 2;
 
 /// This means we can concatenate arrays with individual max length 2^32.
 /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
