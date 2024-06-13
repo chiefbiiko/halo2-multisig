@@ -17,7 +17,7 @@
     rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
     mpt::{MPTChip, MPTProofWitness},
     Field,
-    rlc::circuit::builder::RlcCircuitBuilder,
+    rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair},
     storage::{circuit::EthStorageInput, EthStorageTrace, EthAccountTrace},
     providers::storage::json_to_mpt_input,
     storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES },
@@ -124,7 +124,8 @@ pub fn verify_eip1186<F: Field>(
     ctx: &mut Context<F>,
     chip: &EthStorageChip<F>,
     input: CircuitInputStorageSubquery,
-    mut builder: RlcCircuitBuilder<F>,
+    // mut builder: RlcCircuitBuilder<F>,
+    (ctx_gate, ctx_rlc): RlcContextPair<F>,
     promise_caller: PromiseCaller<F>,
 ) {
 
@@ -245,10 +246,10 @@ pub fn verify_eip1186<F: Field>(
     let storage_trace = {
         // Comments below just to log what load_rlc_cache calls are done in the internal functions:
         // load_rlc_cache bit_length(2*mpt_witness.key_byte_len)
-        chip.mpt.parse_mpt_inclusion_phase1(builder.rlc_ctx_pair(), storage_witness.mpt_witness);
+        chip.mpt.parse_mpt_inclusion_phase1((ctx_gate, ctx_rlc), storage_witness.mpt_witness);
         // load rlc_cache bit_length(value_witness.rlp_field.len())
         let value_trace =
-            chip.rlp().decompose_rlp_field_phase1(builder.rlc_ctx_pair(), storage_witness.value_witness);
+            chip.rlp().decompose_rlp_field_phase1((ctx_gate, ctx_rlc), storage_witness.value_witness);
         let value_trace = value_trace.field_trace;
         debug_assert_eq!(value_trace.max_len, 32);
         EthStorageTrace { value_trace }
@@ -260,11 +261,11 @@ pub fn verify_eip1186<F: Field>(
     let account_trace = {
                 // Comments below just to log what load_rlc_cache calls are done in the internal functions:
         // load_rlc_cache bit_length(2*mpt_witness.key_byte_len)
-        chip.mpt.parse_mpt_inclusion_phase1(builder.rlc_ctx_pair(), account_witness.mpt_witness);
+        chip.mpt.parse_mpt_inclusion_phase1((ctx_gate, ctx_rlc), account_witness.mpt_witness);
         // load rlc_cache bit_length(array_witness.rlp_array.len())
         let array_trace: [_; 4] = chip
             .rlp()
-            .decompose_rlp_array_phase1(builder.rlc_ctx_pair(), account_witness.array_witness, false)
+            .decompose_rlp_array_phase1((ctx_gate, ctx_rlc), account_witness.array_witness, false)
             .field_trace
             .try_into()
             .unwrap();

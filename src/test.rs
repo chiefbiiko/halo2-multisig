@@ -11,8 +11,11 @@
 
 use axiom_eth::{
     halo2_base::{
+        halo2_proofs::halo2curves::bn256::Fr,
         safe_types::{SafeAddress, SafeBytes32, SafeTypeChip, SafeType, FixLenBytes},
-        AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}},
+        AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder},
+        utils::BigPrimeField
+    },
     keccak::{KeccakChip, types::ComponentTypeKeccak},
     rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
     mpt::{MPTChip, MPTProofWitness},
@@ -29,8 +32,8 @@ use axiom_eth::{
         encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
         zkevm_hashes::util::eth_types::ToBigEndian,
 };
-
-  use crate::{verify_eip1186,utils::test_fixture};
+use std::sync::{Arc, Mutex};
+  use crate::{verify_eip1186,utils::{test_fixture, rlc_builder}, constants::*};
 
   #[tokio::test]
   async fn test_verify_eip1186() {
@@ -38,7 +41,21 @@ use axiom_eth::{
     // let msg_str =
     //   b"vulputate ut pharetra tis amet aliquam id diam maecenas ultricies mi eget mauris pharetra et adasdds";
 
-    let test_data = test_fixture().await.expect("test fixture");
+    let input = test_fixture().await.expect("fixture");
+    
+    let mut builder = rlc_builder::<Fr>();
+    let promise_collector = PromiseCaller::new(Arc::new(Mutex::new(PromiseCollector::new(vec![
+        ComponentTypeKeccak::<Fr>::get_type_id(),
+    ]))));
+    let range = RangeChip::new(LOOKUP_BITS, builder.base.lookup_manager().clone());
+    let keccak =
+        KeccakChip::new_with_promise_collector(range.clone(), promise_collector.clone());
+    let rlp = RlpChip::new(&range, None);
+    let mpt = MPTChip::new(rlp, &keccak);
+    let chip = EthStorageChip::new(&mpt, None);
+    let ctx = builder.base.main(0);
+
+    verify_eip1186::<Fr>(ctx, &chip, input, builder, promise_collector)
 
     // base_test()
     //   .k(16)
