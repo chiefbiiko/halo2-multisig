@@ -179,21 +179,24 @@ pub fn verify_eip1186<F: Field>(
    assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);//FIXME
    //ctx.constrain_equal //FIXME
 
-   let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
-   // for p in payload.iter() {
-       // let block_number = input.block_number;
-       let block_number = ctx.load_witness(F::from(input.block_number));
-       // let addr = p.output.subquery.addr;
-       // let storage_root = p.storage_root;
-       let account_subquery =
-           AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
-       let promise_storage_root = promise_caller
-           .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
-               ctx,
-               FieldAccountSubqueryCall(account_subquery),
-           )
-           .unwrap();
-       constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
+    //WIP TODO dodge ComponentTypeAccountSubquery and rather constrain storage_root == account_array_witness[STORAGE_ROOT_INDEX]
+
+//    let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
+//    // for p in payload.iter() {
+//        // let block_number = input.block_number;
+//        let block_number = ctx.load_witness(F::from(input.block_number));
+//        // let addr = p.output.subquery.addr;
+//        // let storage_root = p.storage_root;
+//        let account_subquery =
+//            AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
+//        let promise_storage_root = promise_caller
+//            .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
+//                ctx,
+//                FieldAccountSubqueryCall(account_subquery),
+//            )
+//            .unwrap();
+//        constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
+
 
     //START parse_account_proof_phase0()
     let account_witness = {
