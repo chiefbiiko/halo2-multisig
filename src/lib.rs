@@ -174,10 +174,10 @@ pub fn verify_eip1186<F: Field>(
     // let slot_is_empty = storage_witness.mpt_witness().slot_is_empty;
     // let value = HiLo::from_hi_lo(value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)));
     // assert value is 1 aka Safe signed msg
-   let lo_bytes: [u8; 16] = value.lo().value().to_bytes_le().try_into().expect("lo_bytes");
-   let hi_bytes: [u8; 16] = value.hi().value().to_bytes_le().try_into().expect("hi_bytes");
-   assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);
-   //ctx.constrain_equal
+   let lo_bytes: [u8; 16] = value.lo().value().to_bytes_le()[0..16].try_into().expect("lo bytes");
+   let hi_bytes: [u8; 16] = value.hi().value().to_bytes_le()[0..16].try_into().expect("hi bytes");
+   assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);//FIXME
+   //ctx.constrain_equal //FIXME
 
    let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
    // for p in payload.iter() {
