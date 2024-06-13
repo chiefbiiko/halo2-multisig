@@ -122,11 +122,11 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 //WIP
 pub fn verify_eip1186<F: Field>(
     ctx: &mut Context<F>,
+    (ctx_gate, ctx_rlc): RlcContextPair<F>,
+    promise_caller: PromiseCaller<F>,
     chip: &EthStorageChip<F>,
     input: CircuitInputStorageSubquery,
     // mut builder: RlcCircuitBuilder<F>,
-    (ctx_gate, ctx_rlc): RlcContextPair<F>,
-    promise_caller: PromiseCaller<F>,
 ) {
 
         let gate = chip.gate();

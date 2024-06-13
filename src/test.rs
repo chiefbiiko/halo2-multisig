@@ -42,20 +42,20 @@ use std::sync::{Arc, Mutex};
     //   b"vulputate ut pharetra tis amet aliquam id diam maecenas ultricies mi eget mauris pharetra et adasdds";
 
     let input = test_fixture().await.expect("fixture");
-    
+
     let mut builder = rlc_builder::<Fr>();
-    let promise_collector = PromiseCaller::new(Arc::new(Mutex::new(PromiseCollector::new(vec![
+    let promise_caller = PromiseCaller::new(Arc::new(Mutex::new(PromiseCollector::new(vec![
         ComponentTypeKeccak::<Fr>::get_type_id(),
     ]))));
     let range = RangeChip::new(LOOKUP_BITS, builder.base.lookup_manager().clone());
     let keccak =
-        KeccakChip::new_with_promise_collector(range.clone(), promise_collector.clone());
+        KeccakChip::new_with_promise_collector(range.clone(), promise_caller.clone());
     let rlp = RlpChip::new(&range, None);
     let mpt = MPTChip::new(rlp, &keccak);
     let chip = EthStorageChip::new(&mpt, None);
     let ctx = builder.base.main(0);
 
-    verify_eip1186::<Fr>(ctx, &chip, input, builder, promise_collector)
+    verify_eip1186::<Fr>(ctx, builder.rlc_ctx_pair(), promise_caller, &chip, input);
 
     // base_test()
     //   .k(16)
