@@ -173,6 +173,22 @@ pub fn verify_eip1186<F: Field>(
    let hi_bytes: [u8; 16] = value.hi().value().to_bytes_le().try_into().expect("hi_bytes");
    assert_eq!(u128::from_le_bytes(lo_bytes) + u128::from_le_bytes(hi_bytes), 1_u128);
 
+   let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
+   // for p in payload.iter() {
+       // let block_number = input.block_number;
+       let block_number = ctx.load_witness(F::from(input.block_number));
+       // let addr = p.output.subquery.addr;
+       // let storage_root = p.storage_root;
+       let account_subquery =
+           AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
+       let promise_storage_root = promise_caller
+           .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
+               ctx,
+               FieldAccountSubqueryCall(account_subquery),
+           )
+           .unwrap();
+       constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
+
     //START parse_account_proof_phase0()
     let account_witness = {
         // assign account proof
@@ -187,70 +203,16 @@ pub fn verify_eip1186<F: Field>(
         // Check MPT inclusion for:
         // keccak(addr) => RLP([nonce, balance, storage_root, code_hash])
         let mpt_witness = chip.mpt.parse_mpt_inclusion_phase0(ctx, account_mpt_proof);
-        //FIXME just proceed to phase1 storage and account proof handling then see wheteher we can just circumvent safetype address vahalla
-        EthAccountWitness { address: SafeType::from(SafeTypeChip::raw_to_fix_len_bytes_vec::<20>::(addr)), array_witness, mpt_witness }
+
+        let unsafe_addr = unsafe_bytes_to_assigned(ctx, &input.proof.addr.to_fixed_bytes());
+        let addr_bytes = safe.raw_bytes_to(ctx, unsafe_addr);
+
+        EthAccountWitness { address: addr_bytes, array_witness, mpt_witness }
     };
     //END parse_account_proof_phase0()
    
-//    
+    
 
-//    PayloadStorageSubquery {
-//        storage_witness,
-//        storage_root,
-//        output: AssignedStorageSubqueryResult {
-//            subquery: AssignedStorageSubquery { block_number, addr, slot },
-//            value,
-//        },
-//    }
-// }
-
-// let vt = extract_virtual_table(payload.iter().map(|p| p.output));
-// let lr: Vec<LogicalResult<F, Self::CompType>> =
-//     extract_logical_results(payload.iter().map(|p| p.output));
-// let ctx = pool.main();
-// // promise calls to header component:
-// let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
-// for p in payload.iter() {
-//     let block_number = p.output.subquery.block_number;
-//     let addr = p.output.subquery.addr;
-//     let storage_root = p.storage_root;
-//     let account_subquery =
-//         AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
-//     let promise_storage_root = promise_caller
-//         .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
-//             ctx,
-//             FieldAccountSubqueryCall(account_subquery),
-//         )
-//         .unwrap();
-//     constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
-// }
-// self.payload = Some((keccak, payload));
-// CoreBuilderOutput { public_instances: vec![], virtual_table: vt, logical_results: lr }
-
-// #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, Serialize, Deserialize, Default)]
-// pub struct FieldAccountSubquery<T> {
-//     pub block_number: T,
-//     pub addr: T, // F::CAPACITY >= 160
-//     pub field_idx: T,
-// }
-// type AssignedAccountSubquery<F> = FieldAccountSubquery<AssignedValue<F>>;
-
-let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
-// for p in payload.iter() {
-    // let block_number = input.block_number;
-    let block_number = ctx.load_witness(F::from(input.block_number));
-    // let addr = p.output.subquery.addr;
-    // let storage_root = p.storage_root;
-    let account_subquery =
-        AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
-    let promise_storage_root = promise_caller
-        .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
-            ctx,
-            FieldAccountSubqueryCall(account_subquery),
-        )
-        .unwrap();
-    constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
-// }
 
 // fn virtual_assign_phase1(&mut self, builder: &mut RlcCircuitBuilder<F>) {
 //     let (keccak, payload) = self.payload.take().unwrap();
