@@ -102,14 +102,6 @@ pub struct EthAccountWitness<F: Field> {
     pub(crate) mpt_witness: MPTProofWitness<F>,
 }
 
-/// SafeType for byte (8 bits).
-///
-/// This is a separate struct from `CompactSafeType` with the same behavior. Because
-/// we know only one [`AssignedValue`] is needed to hold the boolean value, we avoid
-/// using `CompactSafeType` to avoid the additional heap allocation from a length 1 vector.
-#[derive(Clone, Copy, Debug)]
-pub struct SafeByte<F: Field>(pub AssignedValue<F>);
-
 pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
     let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
     input.acct_pf.root_hash = block.state_root;
@@ -211,7 +203,7 @@ pub fn verify_eip1186<F: Field>(
     };
     //END parse_account_proof_phase0()
    
-    
+
 
 
 // fn virtual_assign_phase1(&mut self, builder: &mut RlcCircuitBuilder<F>) {
