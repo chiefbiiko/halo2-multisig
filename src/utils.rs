@@ -61,10 +61,12 @@ pub async fn fetch_input(rpc: &str, safe_address: Address, msg_hash: H256) -> Re
     })
 }
 
-pub fn rlc_builder<F: Field>() -> RlcCircuitBuilder<F> {
-    let mut builder = RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS).use_k(K);
-    builder.set_lookup_bits(LOOKUP_BITS);
-    builder
+pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>) {
+    let mut builder1 = RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS).use_k(K);
+    builder1.set_lookup_bits(LOOKUP_BITS);
+    let mut builder2 = RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS).use_k(K);
+    builder2.set_lookup_bits(LOOKUP_BITS);
+    (builder1, builder2)
 }
 
 #[cfg(test)]
