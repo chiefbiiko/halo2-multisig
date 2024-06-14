@@ -44,6 +44,7 @@ tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 # snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
 axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers"] }
 axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
+axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 # crypto
 rlp = "0.5.2"

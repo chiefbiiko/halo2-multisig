@@ -1453,6 +1453,7 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "ark-std 0.3.0",
+ "axiom-codec",
  "axiom-eth",
  "axiom-query",
  "bincode",

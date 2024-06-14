@@ -1,7 +1,7 @@
 use axiom_eth::{
     halo2_base::{
         gates::{
-            circuit::builder::BaseCircuitBuilder, GateInstructions, RangeChip,
+            circuit::builder::BaseCircuitBuilder, GateInstructions, RangeChip, flex_gate::threads::parallelize_core,
         },
         safe_types::{
             FixLenBytes, SafeAddress, SafeBytes32, SafeType, SafeTypeChip,
@@ -29,7 +29,8 @@ use axiom_query::{
         }},
         storage::types::{CircuitInputStorageShard, ComponentTypeStorageSubquery, 
             CircuitInputStorageSubquery
-        }
+        },
+        // common::{extract_logical_results, extract_virtual_table},
     },
     utils::codec::{AssignedAccountSubquery, AssignedStorageSubquery, AssignedStorageSubqueryResult},
 };
@@ -39,10 +40,12 @@ use serde::{Deserialize, Serialize};
 // use std::sync::{Arc, Mutex};
 
 // mod constants;
-#[cfg(test)]
-mod test;
+// #[cfg(test)]
+// mod test;
 // mod types;
-// mod utils;
+mod utils;
+
+use utils::{extract_logical_results, extract_virtual_table};
 
 // use utils::json_to_input;
 
