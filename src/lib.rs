@@ -39,9 +39,9 @@ use ethers_core::types::{Block, EIP1186ProofResponse, H256};
 use serde::{Deserialize, Serialize};
 // use std::sync::{Arc, Mutex};
 
-// mod constants;
-// #[cfg(test)]
-// mod test;
+mod constants;
+#[cfg(test)]
+mod test;
 // mod types;
 mod utils;
 
