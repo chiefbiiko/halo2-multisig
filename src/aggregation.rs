@@ -1,6 +1,18 @@
-use axiom_eth::utils::{      merkle_aggregation::InputMerkleAggregation,snark_verifier::EnhancedSnark};
+use axiom_eth::utils::{  
+    snark_verifier::{
+        get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR,
+    },
+       merkle_aggregation::InputMerkleAggregation};
 
 
+
+fn main() {
+    // let enhanced_snark = EnhancedSnark::new( , None);
+    // let input_merkle_aggr = InputMerkleAggregation::new(vec![]);
+
+    // let aggr_circuit = input_merkle_aggr.prover_circuit(pinning, kzg_params);
+
+}
 
 
 // InputMerkleAggregation::new([EnhancedSnark::new(snarks[0].clone(), None)]);
