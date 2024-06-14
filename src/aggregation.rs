@@ -8,14 +8,23 @@ use axiom_eth::utils::{
 
 fn main() {
     // let enhanced_snark = EnhancedSnark::new( , None);
-    // let input_merkle_aggr = InputMerkleAggregation::new(vec![]);
+    // let input_merkle_aggr = InputMerkleAggregation::new(vec![enhanced_snark]);
 
     // let aggr_circuit = input_merkle_aggr.prover_circuit(pinning, kzg_params);
+
+
+  //SUBQUERY AGGREVGATION TESTS
+//   https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L306
+
+
+    // let snark = gen_snark_shplonk(&params, &pk, prover_circuit, Some(snark_path));
+    // let k = 20u32;
+    // let params = gen_srs(k);
 
 }
 
 
-// InputMerkleAggregation::new([EnhancedSnark::new(snarks[0].clone(), None)]);
+
 
 // https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
 
