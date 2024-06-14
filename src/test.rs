@@ -1,4 +1,3 @@
-
 //   use halo2_base::{
 //     gates::RangeInstructions,
 //     halo2_proofs::halo2curves::bn256::Fr,
@@ -11,26 +10,40 @@
 
 use axiom_eth::{
     halo2_base::{
+        gates::{
+            circuit::builder::BaseCircuitBuilder, GateInstructions, RangeChip,
+        },
         halo2_proofs::halo2curves::bn256::Fr,
-        safe_types::{SafeAddress, SafeBytes32, SafeTypeChip, SafeType, FixLenBytes},
-        AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder},
-        utils::BigPrimeField
+        safe_types::{
+            FixLenBytes, SafeAddress, SafeBytes32, SafeType, SafeTypeChip,
+        },
+        utils::BigPrimeField,
+        AssignedValue, Context,
     },
-    keccak::{KeccakChip, types::ComponentTypeKeccak},
-    rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
+    keccak::{types::ComponentTypeKeccak, KeccakChip},
     mpt::{MPTChip, MPTProofWitness},
-    Field,
-    rlc::circuit::builder::RlcCircuitBuilder,
-    storage::{circuit::EthStorageInput, EthStorageTrace, EthAccountTrace},
     providers::storage::json_to_mpt_input,
-    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES },
+    rlc::circuit::builder::RlcCircuitBuilder,
+    rlp::{
+        types::{RlpArrayWitness, RlpFieldWitness},
+        RlpChip,
+    },
+    storage::{circuit::EthStorageInput, EthAccountTrace, EthStorageTrace},
+    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES},
     utils::{
-        constrain_vec_equal,
+        circuit_utils::bytes::safe_bytes32_to_hi_lo,
+        circuit_utils::bytes::{pack_bytes_to_hilo, unsafe_mpt_root_to_hi_lo},
+        component::utils::create_hasher as create_poseidon_hasher,
+        component::{
+            promise_collector::{PromiseCaller, PromiseCollector},
+            ComponentType,
+        },
+        constrain_vec_equal, encode_addr_to_field,
         hilo::HiLo,
-        circuit_utils::bytes::{unsafe_mpt_root_to_hi_lo, pack_bytes_to_hilo},
-        component::{ComponentType, promise_collector::{PromiseCaller, PromiseCollector}},
-        encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
-        zkevm_hashes::util::eth_types::ToBigEndian,
+        unsafe_bytes_to_assigned,
+    },
+    zkevm_hashes::util::eth_types::ToBigEndian,
+    Field,
 };
 use std::sync::{Arc, Mutex};
 //   use crate::{verify_eip1186,utils::{test_fixture, rlc_builderz}, constants::*};

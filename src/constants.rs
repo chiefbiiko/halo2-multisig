@@ -13,7 +13,8 @@ pub const WITNESS_GEN_ONLY: bool = false;
 pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
 /// Storage slot of Safe's signedMessages mapping
 pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 7,
 ];
 /// Index of the storage root in an account node.
 pub const STORAGE_ROOT_INDEX: usize = 2;

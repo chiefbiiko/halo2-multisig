@@ -1,7 +1,12 @@
-use axiom_eth::    {Field,
-    halo2_base::        safe_types::{SafeAddress, SafeBytes32},
-    {rlp::types::{RlpArrayWitness, RlpFieldWitness},
-storage::circuit::EthStorageInput, mpt:: MPTProofWitness}};
+use axiom_eth::{
+    halo2_base::safe_types::{SafeAddress, SafeBytes32},
+    Field,
+    {
+        mpt::MPTProofWitness,
+        rlp::types::{RlpArrayWitness, RlpFieldWitness},
+        storage::circuit::EthStorageInput,
+    },
+};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 

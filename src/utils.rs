@@ -1,10 +1,14 @@
-use axiom_eth::{storage::EthStorageChip, Field, storage::circuit::EthStorageInput,providers::storage::json_to_mpt_input,rlc::circuit::builder::RlcCircuitBuilder, halo2_base::Context};
+use crate::constants::*;
+use crate::types::CircuitInputStorageSubquery;
 use anyhow::{Context as _, Result};
-use ethers_core::types::{Address,EIP1186ProofResponse, Block, H256};
+use axiom_eth::{
+    halo2_base::Context, providers::storage::json_to_mpt_input,
+    rlc::circuit::builder::RlcCircuitBuilder,
+    storage::circuit::EthStorageInput, storage::EthStorageChip, Field,
+};
+use ethers_core::types::{Address, Block, EIP1186ProofResponse, H256};
 use ethers_providers::{Middleware, Provider};
 use tiny_keccak::{Hasher, Keccak};
-use crate::types::CircuitInputStorageSubquery;
-use crate::constants::*;
 
 // /// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
 // pub const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
@@ -39,14 +43,26 @@ pub fn keccak256<T: AsRef<[u8]>>(input: T) -> [u8; 32] {
     out
 }
 
-pub fn json_to_input(block: Block<H256>, proof: EIP1186ProofResponse) -> EthStorageInput {
-    let mut input = json_to_mpt_input(proof, ACCOUNT_PROOF_MAX_DEPTH, STORAGE_PROOF_MAX_DEPTH);
+pub fn json_to_input(
+    block: Block<H256>,
+    proof: EIP1186ProofResponse,
+) -> EthStorageInput {
+    let mut input = json_to_mpt_input(
+        proof,
+        ACCOUNT_PROOF_MAX_DEPTH,
+        STORAGE_PROOF_MAX_DEPTH,
+    );
     input.acct_pf.root_hash = block.state_root;
     input
 }
 
-pub async fn fetch_input(rpc: &str, safe_address: Address, msg_hash: H256) -> Result<CircuitInputStorageSubquery> {
-    let storage_key = keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
+pub async fn fetch_input(
+    rpc: &str,
+    safe_address: Address,
+    msg_hash: H256,
+) -> Result<CircuitInputStorageSubquery> {
+    let storage_key =
+        keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
 
     let provider = Provider::try_from(rpc)?;
     let latest = provider.get_block_number().await?;
@@ -55,23 +71,30 @@ pub async fn fetch_input(rpc: &str, safe_address: Address, msg_hash: H256) -> Re
         .get_proof(safe_address, vec![storage_key.into()], Some(latest.into()))
         .await?;
 
-    Ok( CircuitInputStorageSubquery {
+    Ok(CircuitInputStorageSubquery {
         block_number: block.number.unwrap().as_u64(),
-        proof: json_to_input(block, proof)
+        proof: json_to_input(block, proof),
     })
 }
 
-pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>) {
-    let mut builder1 = RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS).use_k(K);
+pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>)
+{
+    let mut builder1 =
+        RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS)
+            .use_k(K);
     builder1.set_lookup_bits(LOOKUP_BITS);
-    let mut builder2 = RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS).use_k(K);
+    let mut builder2 =
+        RlcCircuitBuilder::new(WITNESS_GEN_ONLY, DEFAULT_RLC_CACHE_BITS)
+            .use_k(K);
     builder2.set_lookup_bits(LOOKUP_BITS);
     (builder1, builder2)
 }
 
 #[cfg(test)]
 pub fn to_address(addr: &str) -> Address {
-    Address::from(const_hex::decode_to_array::<&str, 20>(addr).expect("address"))
+    Address::from(
+        const_hex::decode_to_array::<&str, 20>(addr).expect("address"),
+    )
 }
 
 #[cfg(test)]

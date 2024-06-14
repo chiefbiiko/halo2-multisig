@@ -9,75 +9,64 @@
 //     // safe_types::SafeTypeChip,
 //     // QuantumCell,
 //   };
-  use axiom_eth::{
+use axiom_eth::{
     halo2_base::{
-        safe_types::{SafeAddress, SafeBytes32, SafeTypeChip, SafeType, FixLenBytes},
-        AssignedValue, Context, gates::{RangeChip, GateInstructions, circuit::builder::BaseCircuitBuilder}},
-    keccak::{KeccakChip, types::ComponentTypeKeccak},
-    rlp::{RlpChip, types::{RlpArrayWitness, RlpFieldWitness},},
+        gates::{
+            circuit::builder::BaseCircuitBuilder, GateInstructions, RangeChip,
+        },
+        safe_types::{
+            FixLenBytes, SafeAddress, SafeBytes32, SafeType, SafeTypeChip,
+        },
+        AssignedValue, Context,
+    },
+    keccak::{types::ComponentTypeKeccak, KeccakChip},
     mpt::{MPTChip, MPTProofWitness},
-    Field,
-    rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair},
-    storage::{circuit::EthStorageInput, EthStorageTrace, EthAccountTrace},
     providers::storage::json_to_mpt_input,
-    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES },
+    rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair},
+    rlp::{
+        types::{RlpArrayWitness, RlpFieldWitness},
+        RlpChip,
+    },
+    storage::{circuit::EthStorageInput, EthAccountTrace, EthStorageTrace},
+    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES},
     utils::{
-        constrain_vec_equal,
+        circuit_utils::bytes::safe_bytes32_to_hi_lo,
+        circuit_utils::bytes::{pack_bytes_to_hilo, unsafe_mpt_root_to_hi_lo},
+        component::utils::create_hasher as create_poseidon_hasher,
+        component::{
+            promise_collector::{PromiseCaller, PromiseCollector},
+            ComponentType,
+        },
+        constrain_vec_equal, encode_addr_to_field,
         hilo::HiLo,
-        circuit_utils::bytes::{unsafe_mpt_root_to_hi_lo, pack_bytes_to_hilo},
-        component::{ComponentType, promise_collector::{PromiseCaller, PromiseCollector}},
-        encode_addr_to_field,unsafe_bytes_to_assigned, circuit_utils::bytes::safe_bytes32_to_hi_lo, component::utils::create_hasher as create_poseidon_hasher},
-        zkevm_hashes::util::eth_types::ToBigEndian,
+        unsafe_bytes_to_assigned,
+    },
+    zkevm_hashes::util::eth_types::ToBigEndian,
+    Field,
 };
-use axiom_query::{utils::codec::AssignedAccountSubquery, components::subqueries::account::types::{FieldAccountSubqueryCall, ComponentTypeAccountSubquery}};
-use ethers_core::types::{EIP1186ProofResponse, Block, H256};
+use axiom_query::{
+    components::subqueries::account::types::{
+        ComponentTypeAccountSubquery, FieldAccountSubqueryCall,
+    },
+    utils::codec::AssignedAccountSubquery,
+};
+use ethers_core::types::{Block, EIP1186ProofResponse, H256};
 // use getset::Getters;
 use serde::{Deserialize, Serialize};
 // use std::sync::{Arc, Mutex};
 
 mod constants;
-mod types;
-mod utils;
 #[cfg(test)]
 mod test;
+mod types;
+mod utils;
 
 // use utils::json_to_input;
 
 use constants::*;
-use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+use types::{
+    CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness,
+};
 
 // //OLD
 // pub fn verify_eip1186<F: Field>(
@@ -157,7 +146,6 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 // //            .unwrap();
 // //        constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
 
-
 //     //START parse_account_proof_phase0()
 //     let account_witness = {
 //         // assign account proof
@@ -179,7 +167,6 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 //         EthAccountWitness { address: addr_bytes, array_witness, mpt_witness }
 //     };
 //     //END parse_account_proof_phase0()
-   
 
 // println!(">>>>>>>>>>>>> completed phase 0");
 
@@ -219,7 +206,6 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 //     };
 //     //END parse_storage_proof_phase1()
 
-
 //     //START parse_account_proof_phase1()
 //     let account_trace = {
 //                 // Comments below just to log what load_rlc_cache calls are done in the internal functions:
@@ -237,16 +223,6 @@ use types::{CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness};
 //         EthAccountTrace { nonce_trace, balance_trace, storage_root_trace, code_hash_trace }
 //     };
 //     //END parse_account_proof_phase1()
-
-
-
-
-
-
-
-
-
-
 
 // //OLD
 // // fn virtual_assign_phase0(
