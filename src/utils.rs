@@ -1,5 +1,6 @@
 use axiom_codec::types::field_elements::AnySubqueryResult;
 use axiom_eth::{
+    providers::setup_provider,
     Field,
     halo2_base::AssignedValue,
     utils::component::{
@@ -28,7 +29,7 @@ use axiom_eth::{
     rlc::circuit::builder::RlcCircuitBuilder,
     storage::circuit::EthStorageInput, storage::EthStorageChip,
 };
-use ethers_core::types::{Address, Block, EIP1186ProofResponse, H256};
+use ethers_core::types::{Address, Block, EIP1186ProofResponse, H256,Chain};
 use ethers_providers::{Middleware, Provider};
 use tiny_keccak::{Hasher, Keccak};
 // use crate::Field;
@@ -157,4 +158,10 @@ pub fn to_msg_hash(hash: &str) -> H256 {
 #[cfg(test)]
 pub async fn test_fixture() -> Result<CircuitInputStorageSubquery> {
     fetch_input("https://rpc.gnosis.gateway.fm", to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"), to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7")).await
+}
+
+#[cfg(test)]
+pub async fn get_latest_block_number(network: Chain) -> u64 {
+    let provider = setup_provider(network);
+    provider.get_block_number().await.unwrap().as_u64()
 }

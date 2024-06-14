@@ -29,7 +29,7 @@ use axiom_query::components::{
             types::{ComponentTypeAccountSubquery, OutputAccountShard},
             STORAGE_ROOT_INDEX,
         },
-        block_header::tests::get_latest_block_number,
+        // block_header::tests::get_latest_block_number,
         common::shard_into_component_promise_results,
         storage::types::CircuitInputStorageSubquery,
     },
@@ -40,7 +40,9 @@ use axiom_query::components::subqueries::storage::{
     types::CircuitInputStorageShard,
 };
 
-pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
+
+// pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
+use crate::{constants::*, utils::get_latest_block_number};
 
 async fn test_mock_storage_subqueries(
     k: u32,
