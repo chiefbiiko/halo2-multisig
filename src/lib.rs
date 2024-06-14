@@ -7,57 +7,52 @@ use axiom_eth::{
             FixLenBytes, SafeAddress, SafeBytes32, SafeType, SafeTypeChip,
         },
         AssignedValue, Context,
-    },
-    keccak::{types::ComponentTypeKeccak, KeccakChip},
-    mpt::{MPTChip, MPTProofWitness},
-    providers::storage::json_to_mpt_input,
-    rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair},
-    rlp::{
+    }, halo2_proofs::plonk::ConstraintSystem, keccak::{types::ComponentTypeKeccak, KeccakChip}, mpt::{MPTChip, MPTProofWitness}, providers::storage::json_to_mpt_input, rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair}, rlp::{
         types::{RlpArrayWitness, RlpFieldWitness},
         RlpChip,
-    },
-    storage::{circuit::EthStorageInput, EthAccountTrace, EthStorageTrace},
-    storage::{EthStorageChip, ACCOUNT_STATE_FIELDS_MAX_BYTES},
-    utils::{
-        circuit_utils::bytes::safe_bytes32_to_hi_lo,
-        circuit_utils::bytes::{pack_bytes_to_hilo, unsafe_mpt_root_to_hi_lo},
-        component::utils::create_hasher as create_poseidon_hasher,
+    }, storage::{circuit::EthStorageInput, EthAccountTrace,EthStorageWitness, EthStorageChip, EthStorageTrace, ACCOUNT_STATE_FIELDS_MAX_BYTES}, utils::{
+        build_utils::aggregation::CircuitMetadata,
+        circuit_utils::bytes::{pack_bytes_to_hilo, safe_bytes32_to_hi_lo, unsafe_mpt_root_to_hi_lo},
         component::{
-            promise_collector::{PromiseCaller, PromiseCollector},
-            ComponentType,
+            circuit::{  CoreBuilderOutput,        ComponentBuilder, ComponentCircuitImpl, CoreBuilder, CoreBuilderOutputParams, CoreBuilderParams}, promise_collector::{PromiseCaller, PromiseCollector}, promise_loader::{combo::PromiseBuilderCombo, single::PromiseLoader}, types::LogicalEmpty, utils::create_hasher, ComponentType, LogicalResult
+
         },
         constrain_vec_equal, encode_addr_to_field,
         hilo::HiLo,
         unsafe_bytes_to_assigned,
-    },
-    zkevm_hashes::util::eth_types::ToBigEndian,
-    Field,
+    }, zkevm_hashes::util::eth_types::ToBigEndian, Field
 };
 use axiom_query::{
-    components::subqueries::account::types::{
+    components::subqueries::{
+        account::{STORAGE_ROOT_INDEX,types::{
         ComponentTypeAccountSubquery, FieldAccountSubqueryCall,
+        }},
+        storage::types::{CircuitInputStorageShard, ComponentTypeStorageSubquery, 
+            CircuitInputStorageSubquery
+        }
     },
-    utils::codec::AssignedAccountSubquery,
+    utils::codec::{AssignedAccountSubquery, AssignedStorageSubquery, AssignedStorageSubqueryResult},
 };
 use ethers_core::types::{Block, EIP1186ProofResponse, H256};
 // use getset::Getters;
 use serde::{Deserialize, Serialize};
 // use std::sync::{Arc, Mutex};
 
-mod constants;
+// mod constants;
 #[cfg(test)]
 mod test;
-mod types;
-mod utils;
+// mod types;
+// mod utils;
 
 // use utils::json_to_input;
 
-use constants::*;
-use types::{
-    CircuitInputStorageSubquery, EthAccountWitness, EthStorageWitness,
-};
+// use constants::*;
+// use types::{
+//     // CircuitInputStorageSubquery,
+//      EthAccountWitness, EthStorageWitness,
+// };
 
-
+use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 
 
 
@@ -71,22 +66,22 @@ pub struct CoreBuilderStorageSubquery<F: Field> {
     payload: Option<(KeccakChip<F>, Vec<PayloadStorageSubquery<F>>)>,
 }
 
-/// Specify the output format of StorageSubquery component.
-#[derive(Clone, Default, Serialize, Deserialize)]
-pub struct CoreParamsStorageSubquery {
-    /// The maximum number of subqueries of this type allowed in a single circuit.
-    pub capacity: usize,
-    /// The maximum depth of the storage MPT trie supported by this circuit.
-    /// The depth is defined as the maximum length of an storage proof, where the storage proof always ends in a terminal leaf node.
-    ///
-    /// In production this will be set to 13 based on the MPT analysis from https://hackmd.io/@axiom/BJBledudT
-    pub max_trie_depth: usize,
-}
-impl CoreBuilderParams for CoreParamsStorageSubquery {
-    fn get_output_params(&self) -> CoreBuilderOutputParams {
-        CoreBuilderOutputParams::new(vec![self.capacity])
-    }
-}
+// /// Specify the output format of StorageSubquery component.
+// #[derive(Clone, Default, Serialize, Deserialize)]
+// pub struct CoreParamsStorageSubquery {
+//     /// The maximum number of subqueries of this type allowed in a single circuit.
+//     pub capacity: usize,
+//     /// The maximum depth of the storage MPT trie supported by this circuit.
+//     /// The depth is defined as the maximum length of an storage proof, where the storage proof always ends in a terminal leaf node.
+//     ///
+//     /// In production this will be set to 13 based on the MPT analysis from https://hackmd.io/@axiom/BJBledudT
+//     pub max_trie_depth: usize,
+// }
+// impl CoreBuilderParams for CoreParamsStorageSubquery {
+//     fn get_output_params(&self) -> CoreBuilderOutputParams {
+//         CoreBuilderOutputParams::new(vec![self.capacity])
+//     }
+// }
 
 type CKeccak<F> = ComponentTypeKeccak<F>;
 type CAccount<F> = ComponentTypeAccountSubquery<F>;
