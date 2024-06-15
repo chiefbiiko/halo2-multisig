@@ -14,10 +14,9 @@ use axiom_eth::{
     },
     snark_verifier_sdk::{halo2::gen_snark_shplonk, CircuitExt},
     utils::{
-        build_utils::pinning::{
-            aggregation::AggregationCircuitPinning, CircuitPinningInstructions,
-            PinnableCircuit, RlcCircuitPinning,
-        },
+        build_utils::{aggregation::get_dummy_aggregation_params, pinning::{
+            aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
+        }},
         merkle_aggregation::InputMerkleAggregation,
         snark_verifier::{
             get_accumulator_indices, AggregationCircuitParams, EnhancedSnark,
@@ -59,8 +58,9 @@ fn main() {
     //TODO pining for subq aggr circuit
     // type CircuitParams = AggregationConfigParams;
     // type BreakPoints = MultiPhaseThreadBreakPoints;
-    // AggregationCircuitPinning::new(params: Self::CircuitParams, break_points: Self::BreakPoints)
-    // into_agg_params ,,
+    let subq_aggr_params = get_dummy_aggregation_params(K);
+    let break_points = TODO;
+    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, break_points);
 
     // kzg params for subq aggr circuit
     let kzg_params = gen_srs(K.try_into().unwrap());
@@ -77,8 +77,8 @@ fn main() {
         snark_receipt: None,
         promise_commit_keccak: keccak_commit, //TODO
     }
-    .prover_circuit(pinning, &kzg_params)
-    .expect("subquery aggregation circuit"); //TODO
+    .prover_circuit(subq_aggr_pinning, &kzg_params)
+    .expect("subquery aggregation circuit");
 
     //CircuitBuilderStage::Keygen or Prove
 
