@@ -177,7 +177,10 @@ fn main() {
         num_lookup_advice: NUM_LOOKUP_ADVICE,
         num_fixed: NUM_FIXED,
     };
-    let snarks = vec![TODO];
+    //TODO use gen_snark_shplonk() to generate `Snark`s
+    let snark_account = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
+    let snark_storage = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
+    let snarks = vec![snark_account, snark_storage];
     let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
         CircuitBuilderStage::Prover,
             aggr_circuit_params,
@@ -185,7 +188,15 @@ fn main() {
             snarks,
             snarks.into_iter().map(|_| None).collect(),
         );
+    //TODO do sth with aggr circuit
+
     
+    //???????? SOME QUESTIONS
+    // - how to choose params for BaseCircuitParams and AggregationConfigParams?
+    // - for a simple storage proof we only need the storage shard and account shard circuit (no results_root_snark, no header_snark), correct?
+    // - does 1 level of aggregation suffice to get an EVM verifier?
+
+
     //OOOOOOORRREND
 }
 
