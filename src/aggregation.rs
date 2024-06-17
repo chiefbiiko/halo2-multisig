@@ -178,6 +178,7 @@ fn main() {
         num_fixed: NUM_FIXED,
     };
     //TODO use gen_snark_shplonk() to generate `Snark`s
+    //COPY https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L137
     let snark_account = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
     let snarks = vec![snark_account, snark_storage];
