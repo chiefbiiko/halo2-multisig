@@ -6,16 +6,14 @@ use std::{
 use crate::{constants::*, subquery_aggregation::InputSubqueryAggregation};
 use axiom_eth::{
     halo2_base::{
-        gates::circuit::BaseCircuitParams, halo2_proofs::{
+        gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{
             halo2curves::bn256::{Bn256, Fr},
             poly::kzg::commitment::ParamsKZG,
         }, utils::fs::gen_srs
     }, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{
-        build_utils::{
-            // aggregation::get_dummy_aggregation_params, 
-            pinning::{
+        build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }},
+        },
         merkle_aggregation::InputMerkleAggregation,
         snark_verifier::{
             get_accumulator_indices, AggregationCircuitParams, EnhancedSnark,
@@ -114,39 +112,25 @@ fn main() {
     //     prompt_rlc_params: RlcCircuitParams,
     //     promise_params: PromiseLoaderParams,
     // )
-
-    //OOOOORRRRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/snark_verifier.rs#L140C49-L146C2
-    // axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
-    //     stage: CircuitBuilderStage,
-    //     circuit_params: AggregationCircuitParams,
-    //     kzg_params: &ParamsKZG<Bn256>,
-    //     snarks: Vec<Snark>,
-    //     agg_vkey_hash_indices: Vec<Option<usize>>,
-    // ) -> (AggregationCircuit, Vec<Vec<AssignedValue<F>>>, AssignedValue<F>);
-
-    
-    //OOOOOOORRREND
-
-
     
     //WIP
-    let rlc_thread_break_points = RlcThreadBreakPoints {}; //TODO
-    let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
+    // let rlc_thread_break_points = RlcThreadBreakPoints {}; //TODO
+    // let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
 
     //TODO let snark_storage, snark_account = generate_snark();
 
-    let subq_aggr_circuit = InputSubqueryAggregation {
-        snark_header: header_snark,        //NEEDED?
-        snark_results_root: results_snark, //NEEDED?
-        snark_account: None,               //TODO
-        snark_storage: None,               //TODO
-        snark_solidity_mapping: None,
-        snark_tx: None,
-        snark_receipt: None,
-        promise_commit_keccak: keccak_commit, //TODO
-    }
-    .prover_circuit(subq_aggr_pinning, &kzg_params)
-    .expect("subquery aggregation circuit");
+    // let subq_aggr_circuit = InputSubqueryAggregation {
+    //     snark_header: header_snark,        //NEEDED?
+    //     snark_results_root: results_snark, //NEEDED?
+    //     snark_account: None,               //TODO
+    //     snark_storage: None,               //TODO
+    //     snark_solidity_mapping: None,
+    //     snark_tx: None,
+    //     snark_receipt: None,
+    //     promise_commit_keccak: keccak_commit, //TODO
+    // }
+    // .prover_circuit(subq_aggr_pinning, &kzg_params)
+    // .expect("subquery aggregation circuit");
 
     //CircuitBuilderStage::Keygen or Prove
 
@@ -160,6 +144,49 @@ fn main() {
     // let snark = gen_snark_shplonk(&params, &pk, prover_circuit, Some(snark_path));
     // let k = 20u32;
     // let params = gen_srs(k);
+
+
+
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // WIP :: TRYING THIS NOW!! => axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit()
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+
+    //OOOOORRRRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/snark_verifier.rs#L140C49-L146C2
+    // axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
+    //     stage: CircuitBuilderStage,
+    //     circuit_params: AggregationCircuitParams,
+    //     kzg_params: &ParamsKZG<Bn256>,
+    //     snarks: Vec<Snark>,
+    //     agg_vkey_hash_indices: Vec<Option<usize>>,
+    // ) -> (AggregationCircuit, Vec<Vec<AssignedValue<F>>>, AssignedValue<F>);
+
+    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
+    let aggr_circuit_params = AggregationConfigParams {
+        degree: K as u32,
+        lookup_bits: LOOKUP_BITS,
+        num_advice: NUM_ADVICE,
+        num_lookup_advice: NUM_LOOKUP_ADVICE,
+        num_fixed: NUM_FIXED,
+    };
+    let snarks = vec![TODO];
+    let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
+        CircuitBuilderStage::Prover,
+            aggr_circuit_params,
+            &kzg_params,
+            snarks,
+            snarks.into_iter().map(|_| None).collect(),
+        );
+    
+    //OOOOOOORRREND
 }
 
 // https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs

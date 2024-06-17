@@ -1,6 +1,6 @@
-/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L91
 pub const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
-/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 /// The circuit will have 2^k rows.
 pub const K: usize = 20;
@@ -9,7 +9,7 @@ pub const LOOKUP_BITS: usize = K - 1;
 /// Constraints are ignored if set to true.
 pub const WITNESS_GEN_ONLY: bool = false;
 /// This means we can concatenate arrays with individual max length 2^32.
-/// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
 pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
 /// Storage slot of Safe's signedMessages mapping
 pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
@@ -18,5 +18,11 @@ pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
 ];
 /// Index of the storage root in an account node.
 pub const STORAGE_ROOT_INDEX: usize = 2;
-//nhttps://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/configs/tests/storage.json#L10
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/configs/tests/storage.json#L10
 pub const NUM_RLC_COLUMNS:usize = 3;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L4
+pub const NUM_ADVICE: usize = 19;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L5
+pub const NUM_LOOKUP_ADVICE: usize = 3;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L6
+pub const NUM_FIXED: usize = 3;
