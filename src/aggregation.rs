@@ -107,6 +107,28 @@ fn main() {
         num_instance_columns: USER_INSTANCE_COLS,
     };
     let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
+    
+    //OOOOORRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/eth_circuit.rs#L140
+    // EthCircuitImpl::new(
+    //     logic_inputs: I,
+    //     prompt_rlc_params: RlcCircuitParams,
+    //     promise_params: PromiseLoaderParams,
+    // )
+
+    //OOOOORRRRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/snark_verifier.rs#L140C49-L146C2
+    // axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
+    //     stage: CircuitBuilderStage,
+    //     circuit_params: AggregationCircuitParams,
+    //     kzg_params: &ParamsKZG<Bn256>,
+    //     snarks: Vec<Snark>,
+    //     agg_vkey_hash_indices: Vec<Option<usize>>,
+    // ) -> (AggregationCircuit, Vec<Vec<AssignedValue<F>>>, AssignedValue<F>);
+
+    
+    //OOOOOOORRREND
+
+
+    
     //WIP
     let rlc_thread_break_points = RlcThreadBreakPoints {}; //TODO
     let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
