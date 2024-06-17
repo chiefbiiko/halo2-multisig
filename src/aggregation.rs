@@ -6,15 +6,14 @@ use std::{
 use crate::{constants::*, subquery_aggregation::InputSubqueryAggregation};
 use axiom_eth::{
     halo2_base::{
-        halo2_proofs::{
+        gates::circuit::BaseCircuitParams, halo2_proofs::{
             halo2curves::bn256::{Bn256, Fr},
             poly::kzg::commitment::ParamsKZG,
-        },
-        utils::fs::gen_srs,
-    },
-    snark_verifier_sdk::{halo2::gen_snark_shplonk, CircuitExt},
-    utils::{
-        build_utils::{aggregation::get_dummy_aggregation_params, pinning::{
+        }, utils::fs::gen_srs
+    }, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{
+        build_utils::{
+            // aggregation::get_dummy_aggregation_params, 
+            pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
         }},
         merkle_aggregation::InputMerkleAggregation,
@@ -22,8 +21,13 @@ use axiom_eth::{
             get_accumulator_indices, AggregationCircuitParams, EnhancedSnark,
             NUM_FE_ACCUMULATOR,
         },
-    },
+    }
 };
+
+use axiom_codec::constants::{
+        USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
+        USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
+    };
 
 fn generate_snark<
     C: CircuitExt<Fr> + PinnableCircuit<Pinning = RlcCircuitPinning>,
@@ -58,9 +62,16 @@ fn main() {
     //TODO pining for subq aggr circuit
     // type CircuitParams = AggregationConfigParams;
     // type BreakPoints = MultiPhaseThreadBreakPoints;
-    let subq_aggr_params = get_dummy_aggregation_params(K);
+    let subq_aggr_params =         AggregationConfigParams {
+        degree: K as u32,
+        lookup_bits:LOOKUP_BITS,
+        num_advice: USER_ADVICE_COLS,
+        num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
+        num_fixed: USER_FIXED_COLS,
+    };
+    //  get_dummy_aggregation_params(K);
     //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
-    let break_points = vec![
+    let subq_aggr_break_points = vec![
         vec![
           1048565,
           1048566,
@@ -82,13 +93,25 @@ fn main() {
           1048566
         ]
       ];
-    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, break_points);
-    //TODO 
-    // let rlc_circuit_pinning = TODO;
+    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
     // kzg params for subq aggr circuit
     let kzg_params = gen_srs(K.try_into().unwrap());
 
-    //TODO let snark_storage, snark_account = ...
+
+    let base_params =         BaseCircuitParams {
+        k: K,
+        num_advice_per_phase: vec![USER_ADVICE_COLS],
+        num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
+        num_fixed: USER_FIXED_COLS,
+        lookup_bits: Some(LOOKUP_BITS),
+        num_instance_columns: USER_INSTANCE_COLS,
+    };
+    let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
+    //WIP
+    let rlc_thread_break_points = RlcThreadBreakPoints {}; //TODO
+    let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
+
+    //TODO let snark_storage, snark_account = generate_snark();
 
     let subq_aggr_circuit = InputSubqueryAggregation {
         snark_header: header_snark,        //NEEDED?

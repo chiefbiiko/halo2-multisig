@@ -18,3 +18,5 @@ pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
 ];
 /// Index of the storage root in an account node.
 pub const STORAGE_ROOT_INDEX: usize = 2;
+//nhttps://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/configs/tests/storage.json#L10
+pub const NUM_RLC_COLUMNS:usize = 3;
