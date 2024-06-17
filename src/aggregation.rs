@@ -59,9 +59,32 @@ fn main() {
     // type CircuitParams = AggregationConfigParams;
     // type BreakPoints = MultiPhaseThreadBreakPoints;
     let subq_aggr_params = get_dummy_aggregation_params(K);
-    let break_points = TODO;
+    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
+    let break_points = vec![
+        vec![
+          1048565,
+          1048566,
+          1048566,
+          1048566,
+          1048564,
+          1048565,
+          1048566,
+          1048565,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048564,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048566
+        ]
+      ];
     let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, break_points);
-
+    //TODO 
+    // let rlc_circuit_pinning = TODO;
     // kzg params for subq aggr circuit
     let kzg_params = gen_srs(K.try_into().unwrap());
 
