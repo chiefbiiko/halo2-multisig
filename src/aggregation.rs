@@ -6,6 +6,7 @@ use std::{
 use crate::{constants::*, subquery_aggregation::InputSubqueryAggregation};
 use axiom_eth::{
     halo2_base::{
+        halo2_proofs::plonk,
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{
             halo2curves::bn256::{Bn256, Fr},
             poly::kzg::commitment::ParamsKZG,
@@ -13,12 +14,10 @@ use axiom_eth::{
     }, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{
         build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        },
-        merkle_aggregation::InputMerkleAggregation,
-        snark_verifier::{
+        }, component::promise_loader::single::PromiseLoaderParams, merkle_aggregation::InputMerkleAggregation, snark_verifier::{
             get_accumulator_indices, AggregationCircuitParams, EnhancedSnark,
             NUM_FE_ACCUMULATOR,
-        },
+        }
     }
 };
 
@@ -26,6 +25,9 @@ use axiom_codec::constants::{
         USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
         USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
     };
+use axiom_query::keygen::shard::{ShardIntentStorage, ShardIntentAccount};
+use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
+use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 
 fn generate_snark<
     C: CircuitExt<Fr> + PinnableCircuit<Pinning = RlcCircuitPinning>,
@@ -179,6 +181,56 @@ fn main() {
     };
     //TODO use gen_snark_shplonk() to generate `Snark`s
     //COPY https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L137
+
+   let (storage_pk, storage_vk, storage_pinning) = {
+        let storage_intent = ShardIntentStorage {
+            core_params: CoreParamsStorageSubquery {
+                capacity: STORAGE_CAPACITY,
+                max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
+            },
+            loader_params: (
+                PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
+                PromiseLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
+            ),
+            k: K as u32,
+            lookup_bits: LOOKUP_BITS,
+        };
+        let keygen_circuit = storage_intent.build_keygen_circuit();
+        let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
+        let pk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.pk");
+        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, pk_path, pinning_path).expect("pk and pinning");
+        let vk = pk.get_vk();
+        let mut vk_file = File::create(format!("/artifacts/storage_circuit.vk")).expect("vk bin file");
+        vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("vk bin write");
+
+                //     let circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
+        //         header_core_params.clone(),
+        //         header_promise_params.clone(),
+        //         pinning,
+        //     );
+        //     circuit.feed_input(Box::new(header_input.clone())).unwrap();
+        //     circuit.fulfill_promise_results(&promise_results).unwrap();
+        //     circuit
+
+        (pk, vk, pinning)
+   };
+   
+    let (account_component_pk, account_component_circuit) = {
+        //TODO create keygen account component circuit
+        // let pk = TODO;
+        // &|pinning| {
+        //     let circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
+        //         header_core_params.clone(),
+        //         header_promise_params.clone(),
+        //         pinning,
+        //     );
+        //     circuit.feed_input(Box::new(header_input.clone())).unwrap();
+        //     circuit.fulfill_promise_results(&promise_results).unwrap();
+        //     circuit
+        // }
+        //     (pk, circuit)
+    };
     let snark_account = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
     let snarks = vec![snark_account, snark_storage];
@@ -189,6 +241,9 @@ fn main() {
             snarks,
             snarks.into_iter().map(|_| None).collect(),
         );
+
+
+
     //TODO do sth with aggr circuit
 
     

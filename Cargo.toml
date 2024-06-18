@@ -43,7 +43,7 @@ tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 # halo2-ecc = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom"] }
 # snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
 axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers", "aggregation"] }
-axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
+axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["keygen"]  }
 axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 # crypto
@@ -88,14 +88,14 @@ const-hex = "1.11.1"
 
 
 [features]
-# default = ["halo2-axiom", "jemallocator", "display", "keygen"]
-# display = ["axiom-eth/display", "dep:ark-std"]
-# asm = ["axiom-eth/asm"]
-# revm = ["axiom-eth/revm"]
-# # halo2-pse = ["axiom-eth/halo2-pse"]
-# halo2-axiom = ["axiom-eth/halo2-axiom"]
-# jemallocator = ["axiom-eth/jemallocator"]
-# keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
+default = ["halo2-axiom", "jemallocator", "display", "keygen"]
+display = ["axiom-eth/display", "dep:ark-std"]
+asm = ["axiom-eth/asm"]
+revm = ["axiom-eth/revm"]
+# halo2-pse = ["axiom-eth/halo2-pse"]
+halo2-axiom = ["axiom-eth/halo2-axiom"]
+jemallocator = ["axiom-eth/jemallocator"]
+keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
 
 # scripts = ["snark-verifier-sdk"]
 
