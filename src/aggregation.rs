@@ -184,14 +184,14 @@ fn main() {
     //COPY https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L137
 
    let (storage_pk, storage_vk, storage_pinning) = {
-    let core_params = CoreParamsStorageSubquery {
-        capacity: STORAGE_CAPACITY,
-        max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
-    };
-    let loader_params = (
-        PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
-        PromiseLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
-    );
+        let core_params = CoreParamsStorageSubquery {
+            capacity: STORAGE_CAPACITY,
+            max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
+        };
+        let loader_params = (
+            PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
+            PromiseLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
+        );
         let storage_intent = ShardIntentStorage {
             core_params,
             loader_params,
@@ -256,6 +256,7 @@ fn main() {
     // - how to choose params for BaseCircuitParams and AggregationConfigParams?
     // - for a simple storage proof we only need the storage shard and account shard circuit (no results_root_snark, no header_snark), correct?
     // - does 1 level of aggregation suffice to get an EVM verifier?
+    // - is create_universal_aggregation_circuit() correct for aggregating component circuits?
 
 
     //..... gen_evm_calldata_shplonk()
