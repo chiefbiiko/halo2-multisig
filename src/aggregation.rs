@@ -207,15 +207,39 @@ fn main() {
         let mut vk_file = File::create(format!("/artifacts/storage_circuit.vk")).expect("vk bin file");
         vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("vk bin write");
 
-        
+        /*
+            let mut promise_results = HashMap::new();
+            let promise_keccak: OutputKeccakShard = serde_json::from_reader(
+                File::open(format!("{cargo_manifest_dir}/data/test/promise_results_keccak_for_agg.json"))
+                    .unwrap(),
+            )?;
+            let promise_header: OutputSubqueryShard<HeaderSubquery, H256> = serde_json::from_reader(
+                File::open(format!("{cargo_manifest_dir}/data/test/promise_results_header_for_agg.json"))
+                    .unwrap(),
+            )?;
+            let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
+                promise_keccak.into_logical_results(),
+            );
+            promise_results.insert(ComponentTypeKeccak::<Fr>::get_type_id(), keccak_merkle);
+            promise_results.insert(
+                ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
+                shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
+                    promise_header.convert_into(),
+                ),
+            );
+
+            let header_input: CircuitInputHeaderShard<Fr> = serde_json::from_reader(File::open(format!(
+                "{cargo_manifest_dir}/data/test/input_header_for_agg.json"
+            ))?)?;
+         */
 
             let circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
                 core_params,
                 loader_params,
                 pinning,
             );
-            // circuit.feed_input(Box::new(header_input.clone())).unwrap();
-            // circuit.fulfill_promise_results(&promise_results).unwrap();
+            circuit.feed_input(Box::new(header_input.clone())).unwrap();
+            circuit.fulfill_promise_results(&promise_results).unwrap();
             // circuit
 
         (pk, vk, pinning)
