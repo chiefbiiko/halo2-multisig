@@ -123,6 +123,7 @@ async fn main() {
     let account_pk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.pk");
     let account_vk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.vk");
     let account_circuit_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.shplonk");
+    std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
 
     //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
