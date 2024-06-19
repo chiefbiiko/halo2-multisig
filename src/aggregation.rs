@@ -25,7 +25,7 @@ use axiom_codec::constants::{
         USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
         USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
     };
-use axiom_query::{components::subqueries::storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}, keygen::shard::{ShardIntentAccount, ShardIntentStorage}};
+use axiom_query::{components::subqueries::{account::circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}}, keygen::shard::{ShardIntentAccount, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -180,31 +180,45 @@ async fn main() {
     };
    
     let (account_pk, account_pinning, account_circuit) = {
-        //TODO create keygen account component circuit
-        // let pk = TODO;
-        // &|pinning| {
-        //     let circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
-        //         header_core_params.clone(),
-        //         header_promise_params.clone(),
-        //         pinning,
-        //     );
-        //     circuit.feed_input(Box::new(header_input.clone())).unwrap();
-        //     circuit.fulfill_promise_results(&promise_results).unwrap();
-        //     circuit
-        // }
-        //     (pk, circuit)
+        let core_params = CoreParamsAccountSubquery {
+            capacity: ACCOUNT_CAPACITY,
+            max_trie_depth: ACCOUNT_PROOF_MAX_DEPTH,
+        };
+        let loader_params = (
+            PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
+            // probly obsolete bc account shard doesn't lookup anything but keccak
+            PromiseLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
+        );
+        let account_intent = ShardIntentAccount {
+            core_params,
+            loader_params,
+            k: K as u32,
+            lookup_bits: LOOKUP_BITS,
+        };
+        let keygen_circuit = account_intent.build_keygen_circuit();
+        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &account_pk_path, &account_pinning_path).expect("acnt pk and pinning");
+        let mut vk_file = File::create(&account_vk_path).expect("acnt vk bin file");
+        pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("acnt vk bin write");
+        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+        let circuit = ComponentCircuitAccountSubquery::<Fr>::prover(
+            core_params,
+            loader_params,
+            pinning,
+        );
+        (pk, pinning, circuit)
     };
 
     let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
-    let snarks = vec![snark_account, snark_storage];
-    let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
-        CircuitBuilderStage::Prover,
-        aggr_circuit_params,
-        &kzg_params,
-        snarks,
-        snarks.into_iter().map(|_| None).collect(),
-    );
+    //NOTE create_universal_aggregation_circuit is called as part of prover_circuit() below
+    // let snarks = vec![snark_account, snark_storage];
+    // let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
+    //     CircuitBuilderStage::Prover,
+    //     aggr_circuit_params,
+    //     &kzg_params,
+    //     snarks,
+    //     snarks.into_iter().map(|_| None).collect(),
+    // );
 
     let subq_aggr_circuit = InputSubqueryAggregation {
         snark_header: header_snark,        //TODO
