@@ -1,9 +1,8 @@
 use std::{
-    fs::File,
-    io::{Read, Write},
+    collections::HashMap, fs::File, io::{Read, Write}, marker::PhantomData
 };
 
-use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation};
+use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, utils::test_fixture};
 use axiom_eth::{
     halo2_base::{
         halo2_proofs::plonk,
@@ -25,89 +24,61 @@ use axiom_codec::constants::{
         USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
         USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
     };
-use axiom_query::keygen::shard::{ShardIntentStorage, ShardIntentAccount};
+use axiom_query::{components::subqueries::storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}, keygen::shard::{ShardIntentAccount, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
 
-fn generate_snark<
-    C: CircuitExt<Fr> + PinnableCircuit<Pinning = RlcCircuitPinning>,
->(
-    name: &'static str,
-    params: &ParamsKZG<Bn256>,
-    keygen_circuit: C,
-    load_prover_circuit: &impl Fn(RlcCircuitPinning) -> C,
-) -> anyhow::Result<EnhancedSnark> {
-    let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let pinning_path = format!("{cargo_manifest_dir}/configs/test/{name}.json");
-    let pk_path = format!("{cargo_manifest_dir}/data/test/{name}.pk");
-    let (pk, pinning) =
-        keygen_circuit.create_pk(params, pk_path, pinning_path)?;
-    let vk = pk.get_vk();
-    let mut vk_file = File::create(format!("data/test/{name}.vk"))?;
-    vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes)?;
-    let mut vk_file = File::create(format!("data/test/{name}.vk.txt"))?;
-    write!(vk_file, "{:?}", vk.pinned())?;
-
-    let component_circuit = load_prover_circuit(pinning);
-
-    let snark_path = format!("data/test/{name}.snark");
-    let snark =
-        gen_snark_shplonk(params, &pk, component_circuit, Some(snark_path));
-    Ok(EnhancedSnark { inner: snark, agg_vk_hash_idx: None })
-}
-
-fn main() {
-    // https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L150
-
-    //TODO pining for subq aggr circuit
-    // type CircuitParams = AggregationConfigParams;
-    // type BreakPoints = MultiPhaseThreadBreakPoints;
-    let subq_aggr_params =         AggregationConfigParams {
-        degree: K as u32,
-        lookup_bits:LOOKUP_BITS,
-        num_advice: USER_ADVICE_COLS,
-        num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
-        num_fixed: USER_FIXED_COLS,
-    };
-    //  get_dummy_aggregation_params(K);
-    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
-    let subq_aggr_break_points = vec![
-        vec![
-          1048565,
-          1048566,
-          1048566,
-          1048566,
-          1048564,
-          1048565,
-          1048566,
-          1048565,
-          1048566,
-          1048565,
-          1048564,
-          1048566,
-          1048564,
-          1048566,
-          1048565,
-          1048564,
-          1048566,
-          1048566
-        ]
-      ];
-    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
-    // kzg params for subq aggr circuit
-    let kzg_params = gen_srs(K.try_into().unwrap());
+#[tokio::main]
+async fn main() {
+    // //TODO pining for subq aggr circuit
+    // // type CircuitParams = AggregationConfigParams;
+    // // type BreakPoints = MultiPhaseThreadBreakPoints;
+    // let subq_aggr_params =         AggregationConfigParams {
+    //     degree: K as u32,
+    //     lookup_bits:LOOKUP_BITS,
+    //     num_advice: USER_ADVICE_COLS,
+    //     num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
+    //     num_fixed: USER_FIXED_COLS,
+    // };
+    // //  get_dummy_aggregation_params(K);
+    // //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
+    // let subq_aggr_break_points = vec![
+    //     vec![
+    //       1048565,
+    //       1048566,
+    //       1048566,
+    //       1048566,
+    //       1048564,
+    //       1048565,
+    //       1048566,
+    //       1048565,
+    //       1048566,
+    //       1048565,
+    //       1048564,
+    //       1048566,
+    //       1048564,
+    //       1048566,
+    //       1048565,
+    //       1048564,
+    //       1048566,
+    //       1048566
+    //     ]
+    //   ];
+    // let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
+    // // kzg params for subq aggr circuit
+    // let kzg_params = gen_srs(K.try_into().unwrap());
 
 
-    let base_params =         BaseCircuitParams {
-        k: K,
-        num_advice_per_phase: vec![USER_ADVICE_COLS],
-        num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
-        num_fixed: USER_FIXED_COLS,
-        lookup_bits: Some(LOOKUP_BITS),
-        num_instance_columns: USER_INSTANCE_COLS,
-    };
-    let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
+    // let base_params =         BaseCircuitParams {
+    //     k: K,
+    //     num_advice_per_phase: vec![USER_ADVICE_COLS],
+    //     num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
+    //     num_fixed: USER_FIXED_COLS,
+    //     lookup_bits: Some(LOOKUP_BITS),
+    //     num_instance_columns: USER_INSTANCE_COLS,
+    // };
+    // let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
     
     //OOOOORRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/eth_circuit.rs#L140
     // EthCircuitImpl::new(
@@ -156,14 +127,14 @@ fn main() {
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // WIP :: TRYING THIS NOW!! => axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit()
+    // WIP => axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit()
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
 
-    //OOOOORRRRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/snark_verifier.rs#L140C49-L146C2
+    //WIP https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/snark_verifier.rs#L140C49-L146C2
     // axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
     //     stage: CircuitBuilderStage,
     //     circuit_params: AggregationCircuitParams,
@@ -171,6 +142,13 @@ fn main() {
     //     snarks: Vec<Snark>,
     //     agg_vkey_hash_indices: Vec<Option<usize>>,
     // ) -> (AggregationCircuit, Vec<Vec<AssignedValue<F>>>, AssignedValue<F>);
+
+    let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let storage_pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
+    let storage_pk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.pk");
+    let storage_vk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.vk");
+    let storage_circuit_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.shplonk")
+    let kzg_params = gen_srs(K.try_into().unwrap());
 
     //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
     let aggr_circuit_params = AggregationConfigParams {
@@ -180,10 +158,11 @@ fn main() {
         num_lookup_advice: NUM_LOOKUP_ADVICE,
         num_fixed: NUM_FIXED,
     };
+
     //TODO use gen_snark_shplonk() to generate `Snark`s
     //COPY https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L137
 
-   let (storage_pk, storage_vk, storage_pinning) = {
+    let (storage_pk, storage_pinning, storage_circuit) = {
         let core_params = CoreParamsStorageSubquery {
             capacity: STORAGE_CAPACITY,
             max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
@@ -199,51 +178,20 @@ fn main() {
             lookup_bits: LOOKUP_BITS,
         };
         let keygen_circuit = storage_intent.build_keygen_circuit();
-        let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
-        let pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
-        let pk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.pk");
-        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, pk_path, pinning_path).expect("pk and pinning");
+        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, storage_pk_path, storage_pinning_path).expect("strg pk and pinning");
         let vk = pk.get_vk();
-        let mut vk_file = File::create(format!("/artifacts/storage_circuit.vk")).expect("vk bin file");
-        vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("vk bin write");
+        let mut vk_file = File::create(storage_vk_path).expect("strg vk bin file");
+        vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("strg vk bin write");
 
-        /*
-            let mut promise_results = HashMap::new();
-            let promise_keccak: OutputKeccakShard = serde_json::from_reader(
-                File::open(format!("{cargo_manifest_dir}/data/test/promise_results_keccak_for_agg.json"))
-                    .unwrap(),
-            )?;
-            let promise_header: OutputSubqueryShard<HeaderSubquery, H256> = serde_json::from_reader(
-                File::open(format!("{cargo_manifest_dir}/data/test/promise_results_header_for_agg.json"))
-                    .unwrap(),
-            )?;
-            let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
-                promise_keccak.into_logical_results(),
-            );
-            promise_results.insert(ComponentTypeKeccak::<Fr>::get_type_id(), keccak_merkle);
-            promise_results.insert(
-                ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
-                shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
-                    promise_header.convert_into(),
-                ),
-            );
+        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+        let circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
+            core_params,
+            loader_params,
+            pinning,
+        );
 
-            let header_input: CircuitInputHeaderShard<Fr> = serde_json::from_reader(File::open(format!(
-                "{cargo_manifest_dir}/data/test/input_header_for_agg.json"
-            ))?)?;
-         */
-
-            let circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
-                core_params,
-                loader_params,
-                pinning,
-            );
-            circuit.feed_input(Box::new(header_input.clone())).unwrap();
-            circuit.fulfill_promise_results(&promise_results).unwrap();
-            // circuit
-
-        (pk, vk, pinning)
-   };
+        (pk, pinning, circuit)
+    };
    
     let (account_component_pk, account_component_circuit) = {
         //TODO create keygen account component circuit
@@ -261,7 +209,7 @@ fn main() {
         //     (pk, circuit)
     };
     let snark_account = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
-    let snark_storage = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
+    let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(storage_circuit_path));
     let snarks = vec![snark_account, snark_storage];
     let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
         CircuitBuilderStage::Prover,
@@ -284,13 +232,10 @@ fn main() {
 
 
     //..... gen_evm_calldata_shplonk()
-    //OOOOOOORRREND
+    //WIPEND
 }
 
-// https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
+//=====NOTES=====
 
-// https://github.com/search?q=repo%3Aaxiom-crypto%2Faxiom-eth%20prover_circuit&type=code
-// let component_circuit = load_prover_circuit(pinning);
-// let mut prover_circuit = input.build(CircuitBuilderStage::Prover, pinning.params, &params)?;
-// prover_circuit.set_break_points(pinning.break_points);
-// let snark = gen_snark_shplonk(&params, &pk, prover_circuit, None::<&str>);
+//AXIOM PROD SUBQ AGGR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
+//RELATED              https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L150

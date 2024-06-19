@@ -64,6 +64,10 @@ serde_yaml = { version = "0.9.16", optional = true }
 # halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "community-edition" }
 # snark-verifier-sdk = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "community-edition" }
 
+
+
+tokio = { version = "1", features = ["full"] }
+
 [dev-dependencies]
 hex = "0.4.3"
 ark-std = { version = "0.3.0", features = ["print-trace"] }
