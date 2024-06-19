@@ -4,21 +4,11 @@ use std::{
 
 use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, utils::test_fixture};
 use axiom_eth::{
-    utils::snark_verifier::EnhancedSnark,
     halo2_base::{
-        halo2_proofs::plonk,
-        gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{
-            halo2curves::bn256::{Bn256, Fr},
-            poly::kzg::commitment::ParamsKZG,
-        }, utils::fs::gen_srs
-    }, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{
-        build_utils::pinning::{
+        gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
+    }, keccak::promise::generate_keccak_shards_from_calls, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }, component::promise_loader::single::PromiseLoaderParams, merkle_aggregation::InputMerkleAggregation, snark_verifier::{
-            get_accumulator_indices, AggregationCircuitParams, EnhancedSnark,
-            NUM_FE_ACCUMULATOR,
-        }
-    }
+        }, component::promise_loader::single::PromiseLoaderParams, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
 
 use axiom_codec::constants::{
@@ -169,6 +159,7 @@ async fn main() {
             loader_params,
             pinning,
         );
+        // circuit.feed_input(Box::new(input)).unwrap(); whyhow feed input here??????
         (pk, pinning, circuit)
     };
    
@@ -198,6 +189,7 @@ async fn main() {
             loader_params,
             pinning,
         );
+        // circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
         (pk, pinning, circuit)
     };
 
@@ -213,15 +205,23 @@ async fn main() {
     //     snarks.into_iter().map(|_| None).collect(),
     // );
 
+    //WIP FIXME
+    // let output_keccak_shard = generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
+    // let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
+    //     promise_keccak.into_logical_results(),
+    // );
+    // let keccak_commit = keccak_merkle.leaves()[0].commit;
+
+
     let subq_aggr_circuit = InputSubqueryAggregation {
-        snark_header: header_snark,        //TODO
-        snark_results_root: results_snark, //TODO
-        snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}),               
-        snark_storage: Some(EnhancedSnark{inner: snark_storage, agg_vk_hash_idx:None}),              
+        snark_header: header_snark,        //TODO account needs header
+        snark_results_root: results_snark, //TODO everything needs results root
+        snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}), // account needs header
+        snark_storage: Some(EnhancedSnark{inner: snark_storage, agg_vk_hash_idx:None}), // storage needs account         
         snark_solidity_mapping: None,
         snark_tx: None,
         snark_receipt: None,
-        promise_commit_keccak: keccak_commit, //TODO
+        promise_commit_keccak: Default::default(), //TODO
     }
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
