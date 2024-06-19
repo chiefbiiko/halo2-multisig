@@ -15,7 +15,7 @@ use axiom_codec::constants::{
         USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
         USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
     };
-use axiom_query::{components::subqueries::{account::circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}}, keygen::shard::{ShardIntentAccount, ShardIntentStorage}};
+use axiom_query::{components::subqueries::{account::circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, block_header::circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -123,6 +123,10 @@ async fn main() {
     let account_pk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.pk");
     let account_vk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.vk");
     let account_circuit_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.shplonk");
+    let header_pinning_path = format!("{cargo_manifest_dir}/artifacts/header_circuit_pinning.json");
+    let header_pk_path = format!("{cargo_manifest_dir}/artifacts/header_circuit.pk");
+    let header_vk_path = format!("{cargo_manifest_dir}/artifacts/header_circuit.vk");
+    let header_circuit_path = format!("{cargo_manifest_dir}/artifacts/header_circuit.shplonk");
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
 
@@ -195,19 +199,38 @@ async fn main() {
         (pk, pinning, account_circuit)
     };
 
+    let (header_pk, header_pinning, header_circuit) = {
+        let core_params = CoreParamsHeaderSubquery {
+            capacity: HEADER_CAPACITY,
+            max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
+        };
+        let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
+        let header_intent = ShardIntentHeader {
+            core_params,
+            loader_params,
+            k: K as u32,
+            lookup_bits: LOOKUP_BITS,
+        };
+        let keygen_circuit = header_intent.build_keygen_circuit();
+        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
+        let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
+        pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("hdr vk bin write");
+        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+        let header_circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
+            core_params,
+            loader_params,
+            pinning,
+        );
+        //IGNORE for now - think we dont need to feed input to the header component
+        // header_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
+        (pk, pinning, header_circuit)
+    };
+
+    let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
     let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
-    //NOTE create_universal_aggregation_circuit is called as part of prover_circuit() below
-    // let snarks = vec![snark_account, snark_storage];
-    // let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
-    //     CircuitBuilderStage::Prover,
-    //     aggr_circuit_params,
-    //     &kzg_params,
-    //     snarks,
-    //     snarks.into_iter().map(|_| None).collect(),
-    // );
 
-    //WIP TODO get keccak calls originating from storage shard
+    // get keccak calls originating from storage shard that got input //~?
     let output_keccak_shard = generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
     let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
         output_keccak_shard.into_logical_results(),
@@ -216,14 +239,14 @@ async fn main() {
 
 
     let subq_aggr_circuit = InputSubqueryAggregation {
-        snark_header: header_snark,        //TODO account needs header
+        snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // account needs header
         snark_results_root: results_snark, //TODO everything needs results root
         snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}), // account needs header
         snark_storage: Some(EnhancedSnark{inner: snark_storage, agg_vk_hash_idx:None}), // storage needs account         
         snark_solidity_mapping: None,
         snark_tx: None,
         snark_receipt: None,
-        promise_commit_keccak: keccak_commit, //TODO
+        promise_commit_keccak: keccak_commit, //~?
     }
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
