@@ -8,7 +8,7 @@ use axiom_eth::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
     }, keccak::promise::generate_keccak_shards_from_calls, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }, component::promise_loader::single::PromiseLoaderParams, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
+        }, component::{promise_loader::single::PromiseLoaderParams, ComponentPromiseResultsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
 
 use axiom_codec::constants::{
@@ -154,13 +154,14 @@ async fn main() {
         let mut vk_file = File::create(&storage_vk_path).expect("strg vk bin file");
         pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("strg vk bin write");
         //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
-        let circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
+        let storage_circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
             core_params,
             loader_params,
             pinning,
         );
-        // circuit.feed_input(Box::new(input)).unwrap(); whyhow feed input here??????
-        (pk, pinning, circuit)
+        // TODO feed input to storage shard - only to storage shard bc it is our entry!?
+        // storage_circuit.feed_input(Box::new(input)).unwrap(); whyhow, still probly feed input here??????
+        (pk, pinning, storage_circuit)
     };
    
     let (account_pk, account_pinning, account_circuit) = {
@@ -170,8 +171,7 @@ async fn main() {
         };
         let loader_params = (
             PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
-            // probly obsolete bc account shard doesn't lookup anything but keccak
-            PromiseLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
+            PromiseLoaderParams::new_for_one_shard(HEADER_CAPACITY),
         );
         let account_intent = ShardIntentAccount {
             core_params,
@@ -184,13 +184,14 @@ async fn main() {
         let mut vk_file = File::create(&account_vk_path).expect("acnt vk bin file");
         pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("acnt vk bin write");
         //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
-        let circuit = ComponentCircuitAccountSubquery::<Fr>::prover(
+        let account_circuit = ComponentCircuitAccountSubquery::<Fr>::prover(
             core_params,
             loader_params,
             pinning,
         );
-        // circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
-        (pk, pinning, circuit)
+        //IGNORE for now - think we dont need to feed input to the account component
+        // account_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
+        (pk, pinning, account_circuit)
     };
 
     let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
@@ -205,12 +206,12 @@ async fn main() {
     //     snarks.into_iter().map(|_| None).collect(),
     // );
 
-    //WIP FIXME
-    // let output_keccak_shard = generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
-    // let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
-    //     promise_keccak.into_logical_results(),
-    // );
-    // let keccak_commit = keccak_merkle.leaves()[0].commit;
+    //WIP TODO get keccak calls originating from storage shard
+    let output_keccak_shard = generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
+    let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
+        output_keccak_shard.into_logical_results(),
+    );
+    let keccak_commit = keccak_merkle.leaves()[0].commit;
 
 
     let subq_aggr_circuit = InputSubqueryAggregation {
@@ -221,7 +222,7 @@ async fn main() {
         snark_solidity_mapping: None,
         snark_tx: None,
         snark_receipt: None,
-        promise_commit_keccak: Default::default(), //TODO
+        promise_commit_keccak: keccak_commit, //TODO
     }
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
@@ -231,7 +232,12 @@ async fn main() {
 
     
     //???????? SOME QUESTIONS
-    // - how to choose params for BaseCircuitParams and AggregationConfigParams?
+    // - how to aggregate from component storage circuit to evm verifier circuit?
+    //   ..in our scenario where we want to generate a single storage proof proof:
+    //     - pass `CircuitInputStorageSubquery` to `storage_circuit.feed_input(Box::new(input))` above?
+    //     - after `feed_input()` do we need to call `circuit.fulfill_promise_results(&promise_results)`?
+    //     - if yes, how do we get these ---------------------------------------------/\/\/\/\/\/\/\/\  ?
+    //   
     // - does 1 level of aggregation suffice to get an EVM verifier?
     //     -> no we need at least one more level of aggregation to verify keccak promise commitments
     //     -> see https://github.com/axiom-crypto/axiom-eth/tree/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query#subquery-aggregation-circuit
