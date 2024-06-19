@@ -32,3 +32,5 @@ pub const KECCAK_F_CAPACITY: usize = 1200;
 pub const STORAGE_CAPACITY: usize = 1;
 //NOTE we only do a single storage proof at a time
 pub const ACCOUNT_CAPACITY: usize = 1;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/types.rs#L76
+pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;

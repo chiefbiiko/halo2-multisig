@@ -4,6 +4,7 @@ use std::{
 
 use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, utils::test_fixture};
 use axiom_eth::{
+    utils::snark_verifier::EnhancedSnark,
     halo2_base::{
         halo2_proofs::plonk,
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{
@@ -31,54 +32,54 @@ use axiom_eth::utils::component::ComponentCircuit;
 
 #[tokio::main]
 async fn main() {
-    // //TODO pining for subq aggr circuit
-    // // type CircuitParams = AggregationConfigParams;
-    // // type BreakPoints = MultiPhaseThreadBreakPoints;
-    // let subq_aggr_params =         AggregationConfigParams {
-    //     degree: K as u32,
-    //     lookup_bits:LOOKUP_BITS,
-    //     num_advice: USER_ADVICE_COLS,
-    //     num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
-    //     num_fixed: USER_FIXED_COLS,
-    // };
-    // //  get_dummy_aggregation_params(K);
-    // //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
-    // let subq_aggr_break_points = vec![
-    //     vec![
-    //       1048565,
-    //       1048566,
-    //       1048566,
-    //       1048566,
-    //       1048564,
-    //       1048565,
-    //       1048566,
-    //       1048565,
-    //       1048566,
-    //       1048565,
-    //       1048564,
-    //       1048566,
-    //       1048564,
-    //       1048566,
-    //       1048565,
-    //       1048564,
-    //       1048566,
-    //       1048566
-    //     ]
-    //   ];
-    // let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
-    // // kzg params for subq aggr circuit
-    // let kzg_params = gen_srs(K.try_into().unwrap());
+    //TODO pining for subq aggr circuit
+    // type CircuitParams = AggregationConfigParams;
+    // type BreakPoints = MultiPhaseThreadBreakPoints;
+    let subq_aggr_params =         AggregationConfigParams {
+        degree: K as u32,
+        lookup_bits:LOOKUP_BITS,
+        num_advice: USER_ADVICE_COLS,
+        num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
+        num_fixed: USER_FIXED_COLS,
+    };
+    //  get_dummy_aggregation_params(K);
+    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
+    let subq_aggr_break_points = vec![
+        vec![
+          1048565,
+          1048566,
+          1048566,
+          1048566,
+          1048564,
+          1048565,
+          1048566,
+          1048565,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048564,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048566
+        ]
+      ];
+    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
+    // kzg params for subq aggr circuit
+    let kzg_params = gen_srs(K.try_into().unwrap());
 
 
-    // let base_params =         BaseCircuitParams {
-    //     k: K,
-    //     num_advice_per_phase: vec![USER_ADVICE_COLS],
-    //     num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
-    //     num_fixed: USER_FIXED_COLS,
-    //     lookup_bits: Some(LOOKUP_BITS),
-    //     num_instance_columns: USER_INSTANCE_COLS,
-    // };
-    // let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
+    let base_params =         BaseCircuitParams {
+        k: K,
+        num_advice_per_phase: vec![USER_ADVICE_COLS],
+        num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
+        num_fixed: USER_FIXED_COLS,
+        lookup_bits: Some(LOOKUP_BITS),
+        num_instance_columns: USER_INSTANCE_COLS,
+    };
+    let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
     
     //OOOOORRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/eth_circuit.rs#L140
     // EthCircuitImpl::new(
@@ -92,19 +93,6 @@ async fn main() {
     // let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
 
     //TODO let snark_storage, snark_account = generate_snark();
-
-    // let subq_aggr_circuit = InputSubqueryAggregation {
-    //     snark_header: header_snark,        //NEEDED?
-    //     snark_results_root: results_snark, //NEEDED?
-    //     snark_account: None,               //TODO
-    //     snark_storage: None,               //TODO
-    //     snark_solidity_mapping: None,
-    //     snark_tx: None,
-    //     snark_receipt: None,
-    //     promise_commit_keccak: keccak_commit, //TODO
-    // }
-    // .prover_circuit(subq_aggr_pinning, &kzg_params)
-    // .expect("subquery aggregation circuit");
 
     //CircuitBuilderStage::Keygen or Prove
 
@@ -218,15 +206,29 @@ async fn main() {
         snarks.into_iter().map(|_| None).collect(),
     );
 
+    let subq_aggr_circuit = InputSubqueryAggregation {
+        snark_header: header_snark,        //TODO
+        snark_results_root: results_snark, //TODO
+        snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}),               
+        snark_storage: Some(EnhancedSnark{inner: snark_storage, agg_vk_hash_idx:None}),              
+        snark_solidity_mapping: None,
+        snark_tx: None,
+        snark_receipt: None,
+        promise_commit_keccak: keccak_commit, //TODO
+    }
+    .prover_circuit(subq_aggr_pinning, &kzg_params)
+    .expect("subquery aggregation circuit");
+
     //TODO do sth with aggr circuit
 
 
     
     //???????? SOME QUESTIONS
     // - how to choose params for BaseCircuitParams and AggregationConfigParams?
-    // - for a simple storage proof we only need the storage shard and account shard circuit (no results_root_snark, no header_snark), correct?
     // - does 1 level of aggregation suffice to get an EVM verifier?
-    // - is create_universal_aggregation_circuit() correct for aggregating component circuits?
+    //     -> no we need at least one more level of aggregation to verify keccak promise commitments
+    //     -> see https://github.com/axiom-crypto/axiom-eth/tree/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query#subquery-aggregation-circuit
+    // - 
 
     //WIPEND
 }
