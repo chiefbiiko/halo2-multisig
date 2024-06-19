@@ -147,7 +147,11 @@ async fn main() {
     let storage_pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
     let storage_pk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.pk");
     let storage_vk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.vk");
-    let storage_circuit_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.shplonk")
+    let storage_circuit_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.shplonk");
+    let account_pinning_path = format!("{cargo_manifest_dir}/artifacts/account_circuit_pinning.json");
+    let account_pk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.pk");
+    let account_vk_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.vk");
+    let account_circuit_path = format!("{cargo_manifest_dir}/artifacts/account_circuit.shplonk");
     let kzg_params = gen_srs(K.try_into().unwrap());
 
     //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
@@ -158,9 +162,6 @@ async fn main() {
         num_lookup_advice: NUM_LOOKUP_ADVICE,
         num_fixed: NUM_FIXED,
     };
-
-    //TODO use gen_snark_shplonk() to generate `Snark`s
-    //COPY https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L137
 
     let (storage_pk, storage_pinning, storage_circuit) = {
         let core_params = CoreParamsStorageSubquery {
@@ -178,22 +179,19 @@ async fn main() {
             lookup_bits: LOOKUP_BITS,
         };
         let keygen_circuit = storage_intent.build_keygen_circuit();
-        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, storage_pk_path, storage_pinning_path).expect("strg pk and pinning");
-        let vk = pk.get_vk();
-        let mut vk_file = File::create(storage_vk_path).expect("strg vk bin file");
-        vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("strg vk bin write");
-
+        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &storage_pk_path, &storage_pinning_path).expect("strg pk and pinning");
+        let mut vk_file = File::create(&storage_vk_path).expect("strg vk bin file");
+        pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("strg vk bin write");
         //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
         let circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
             core_params,
             loader_params,
             pinning,
         );
-
         (pk, pinning, circuit)
     };
    
-    let (account_component_pk, account_component_circuit) = {
+    let (account_pk, account_pinning, account_circuit) = {
         //TODO create keygen account component circuit
         // let pk = TODO;
         // &|pinning| {
@@ -208,20 +206,20 @@ async fn main() {
         // }
         //     (pk, circuit)
     };
-    let snark_account = gen_snark_shplonk(&kzg_params, &pk, component_circuit, Some(snark_path));
-    let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(storage_circuit_path));
+
+    let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
+    let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
     let snarks = vec![snark_account, snark_storage];
     let aggr_circuit_etc = axiom_eth::utils::snark_verifier::create_universal_aggregation_circuit(
         CircuitBuilderStage::Prover,
-            aggr_circuit_params,
-            &kzg_params,
-            snarks,
-            snarks.into_iter().map(|_| None).collect(),
-        );
-
-
+        aggr_circuit_params,
+        &kzg_params,
+        snarks,
+        snarks.into_iter().map(|_| None).collect(),
+    );
 
     //TODO do sth with aggr circuit
+
 
     
     //???????? SOME QUESTIONS
@@ -230,8 +228,6 @@ async fn main() {
     // - does 1 level of aggregation suffice to get an EVM verifier?
     // - is create_universal_aggregation_circuit() correct for aggregating component circuits?
 
-
-    //..... gen_evm_calldata_shplonk()
     //WIPEND
 }
 
@@ -239,3 +235,4 @@ async fn main() {
 
 //AXIOM PROD SUBQ AGGR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
 //RELATED              https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L150
+//... gen_evm_calldata_shplonk()
