@@ -248,6 +248,10 @@ async fn main() {
         let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
     
         //WIP CircuitInputResultsRootShard
+        // SubqueryResultsTable::new(vec![]);
+        //FlattenedSubqueryResult::new(SubqueryKey([T;csubqkeylen]),SubqueryOutput([T, cmaxsubqout]))
+        // shard_into_component_promise_results()
+        //==>>>>>> https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/storage/tests.rs#L54
         let results_input = TODO;
         let mut results_circuit = ComponentCircuitResultsRoot::<Fr>::new(
             CoreParamsResultRoot { enabled_types, capacity: results_input.subqueries.len() },
