@@ -8,7 +8,7 @@ use axiom_eth::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
     }, keccak::promise::generate_keccak_shards_from_calls, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
+        }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType, SelectedDataShardsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
 
 use axiom_codec::{constants::{
@@ -247,12 +247,16 @@ async fn main() {
         );
         let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
     
+        //WIP CircuitInputResultsRootShard
+        let results_input = TODO;
         let mut results_circuit = ComponentCircuitResultsRoot::<Fr>::new(
             CoreParamsResultRoot { enabled_types, capacity: results_input.subqueries.len() },
             (PromiseLoaderParams::new_for_one_shard(200), promise_results_params.clone()),
-            result_rlc_pinning.params,
+            rlc_params,
         );
-        results_circuit.feed_input(Box::new(results_input.clone()))?;
+        results_circuit.feed_input(Box::new(results_input.clone())).expect("feed results");
+        //WIP
+        let promise_results = HashMap::new();
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
         results_circuit.calculate_params();
     
