@@ -8,14 +8,13 @@ use axiom_eth::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
     }, keccak::promise::generate_keccak_shards_from_calls, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }, component::{promise_loader::single::PromiseLoaderParams, ComponentPromiseResultsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
+        }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
 
-use axiom_codec::constants::{
-        USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS,
-        USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS,
-    };
-use axiom_query::{components::subqueries::{account::circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, block_header::circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
+use axiom_codec::{constants::{
+        NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
+    }, types::native::SubqueryType};
+use axiom_query::{components::{results::circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::ComponentTypeAccountSubquery}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -226,6 +225,51 @@ async fn main() {
         (pk, pinning, header_circuit)
     };
 
+
+    let (results_pk, results_pinning, results_circuit) = {
+
+        let mut enabled_types = [false; NUM_SUBQUERY_TYPES];
+        enabled_types[SubqueryType::Storage as usize] = true;
+        enabled_types[SubqueryType::Account as usize] = true;
+        enabled_types[SubqueryType::Header as usize] = true;
+        let mut params_per_comp = HashMap::new();
+        params_per_comp.insert(
+            ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
+            SingleComponentLoaderParams::new(0, vec![3]),
+        );
+        params_per_comp.insert(
+            ComponentTypeAccountSubquery::<Fr>::get_type_id(),
+            SingleComponentLoaderParams::new_for_one_shard(ACCOUNT_CAPACITY),
+        );
+        params_per_comp.insert(
+            ComponentTypeStorageSubquery::<Fr>::get_type_id(),
+            SingleComponentLoaderParams::new_for_one_shard(STORAGE_CAPACITY),
+        );
+        let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
+    
+        let mut results_circuit = ComponentCircuitResultsRoot::<Fr>::new(
+            CoreParamsResultRoot { enabled_types, capacity: results_input.subqueries.len() },
+            (PromiseLoaderParams::new_for_one_shard(200), promise_results_params.clone()),
+            result_rlc_pinning.params,
+        );
+        results_circuit.feed_input(Box::new(results_input.clone()))?;
+        results_circuit.fulfill_promise_results(&promise_results).unwrap();
+        results_circuit.calculate_params();
+    
+        // let results_snark =
+        //     generate_snark("results_root_for_agg", params, results_circuit, &|pinning| {
+        //         let results_circuit = ComponentCircuitResultsRoot::<Fr>::prover(
+        //             CoreParamsResultRoot { enabled_types, capacity: results_input.subqueries.len() },
+        //             (PromiseLoaderParams::new_for_one_shard(200), promise_results_params.clone()),
+        //             pinning,
+        //         );
+        //         results_circuit.feed_input(Box::new(results_input.clone())).unwrap();
+        //         results_circuit.fulfill_promise_results(&promise_results).unwrap();
+        //         results_circuit
+        //     })?;
+
+    };
+
     let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
     let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
@@ -274,4 +318,6 @@ async fn main() {
 
 //AXIOM PROD SUBQ AGGR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
 //RELATED              https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L150
+//... gen_evm_proof_shplonk()
 //... gen_evm_calldata_shplonk()
+//... gen_evm_verifier_shplonk::<AggregationCircuit>(
