@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, fs::File, io::{Read, Write}, marker::PhantomData
 };
 
-use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, utils::test_fixture};
+use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, test, utils::test_fixture};
 use axiom_eth::{
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
@@ -13,8 +13,8 @@ use axiom_eth::{
 
 use axiom_codec::{constants::{
         NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
-    }, types::native::SubqueryType};
-use axiom_query::{components::{results::circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::ComponentTypeAccountSubquery}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
+    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, SubqueryType}}};
+use axiom_query::{components::{results::circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -165,6 +165,41 @@ async fn main() {
         );
         // TODO feed input to storage shard - only to storage shard bc it is our entry!?
         // storage_circuit.feed_input(Box::new(input)).unwrap(); whyhow, still probly feed input here??????
+        let (subq_input, storage_hash, addr, block_number) = test_fixture().await.expect("fixture");
+        //====
+        let promise_account = OutputAccountShard {
+            results: vec![AnySubqueryResult {
+                subquery: AccountSubquery {
+                    block_number,
+                    field_idx: STORAGE_ROOT_INDEX as u32,
+                    addr,
+                },
+                value: storage_hash,
+            }],
+        };
+        //====
+        let shard_input = CircuitInputStorageShard::<Fr> { requests: vec![subq_input], _phantom: PhantomData };
+        storage_circuit.feed_input(Box::new(shard_input)).unwrap();
+        storage_circuit.calculate_params();
+        // let promises = [
+        //     (
+        //         ComponentTypeKeccak::<Fr>::get_type_id(),
+        //         ComponentPromiseResultsInMerkle::from_single_shard(
+        //             generate_keccak_shards_from_calls(&circuit, keccak_f_capacity)
+        //                 .unwrap()
+        //                 .into_logical_results(),
+        //         ),
+        //     ),
+        //     (
+        //         ComponentTypeAccountSubquery::<Fr>::get_type_id(),
+        //         shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
+        //             promise_account.into(),
+        //         ),
+        //     ),
+        // ]
+        // .into_iter()
+        // .collect();
+        // circuit.fulfill_promise_results(&promises).unwrap();
         (pk, pinning, storage_circuit)
     };
    

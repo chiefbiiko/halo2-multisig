@@ -1,5 +1,6 @@
 use axiom_codec::types::field_elements::AnySubqueryResult;
 use axiom_eth::{
+    mpt::KECCAK_RLP_EMPTY_STRING,
     providers::setup_provider,
     Field,
     halo2_base::AssignedValue,
@@ -29,7 +30,7 @@ use axiom_eth::{
     rlc::circuit::builder::RlcCircuitBuilder,
     storage::circuit::EthStorageInput, storage::EthStorageChip,
 };
-use ethers_core::types::{Address, Block, EIP1186ProofResponse, H256,Chain};
+use ethers_core::types::{Address, Block, EIP1186ProofResponse, H160,H256,Chain};
 use ethers_providers::{Middleware, Provider};
 use tiny_keccak::{Hasher, Keccak};
 // use crate::Field;
@@ -113,7 +114,8 @@ pub async fn fetch_input(
     rpc: &str,
     safe_address: Address,
     msg_hash: H256,
-) -> Result<CircuitInputStorageSubquery> {
+    //      circuit_input, storage_root, address, block_number
+) -> Result<(CircuitInputStorageSubquery, H256, H160, u32)> {
     let storage_key =
         keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
 
@@ -123,11 +125,18 @@ pub async fn fetch_input(
     let proof = provider
         .get_proof(safe_address, vec![storage_key.into()], Some(latest.into()))
         .await?;
+    let storage_hash = if proof.storage_hash.is_zero() {
+        // RPC provider may give zero storage hash for empty account, but the correct storage hash should be the null root = keccak256(0x80)
+        H256::from_slice(&KECCAK_RLP_EMPTY_STRING)
+    } else {
+        proof.storage_hash
+    };
 
-    Ok(CircuitInputStorageSubquery {
-        block_number: block.number.unwrap().as_u64(),
+    let block_number: u32 = block.number.unwrap().try_into().unwrap();
+    Ok((CircuitInputStorageSubquery {
+        block_number: block_number.into(),
         proof: json_to_input(block, proof),
-    })
+    }, storage_hash.into(), safe_address.into(), block_number))
 }
 
 // pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>)
@@ -156,7 +165,7 @@ pub fn to_msg_hash(hash: &str) -> H256 {
 }
 
 #[cfg(test)]
-pub async fn test_fixture() -> Result<CircuitInputStorageSubquery> {
+pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery, H256,H160, u32)> {
     fetch_input("https://rpc.gnosis.gateway.fm", to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"), to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7")).await
 }
 
