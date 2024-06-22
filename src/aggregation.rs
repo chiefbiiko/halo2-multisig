@@ -267,6 +267,7 @@ async fn main() {
         enabled_types[SubqueryType::Storage as usize] = true;
         enabled_types[SubqueryType::Account as usize] = true;
         enabled_types[SubqueryType::Header as usize] = true;
+        let num_enabled_subqs = 3;
         let mut params_per_comp = HashMap::new();
         params_per_comp.insert(
             ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
@@ -282,22 +283,23 @@ async fn main() {
         );
         let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
     
+        //QUESTION :: do we need to feed input to results root shard?
         //WIP CircuitInputResultsRootShard
         // SubqueryResultsTable::new(vec![]);
         //FlattenedSubqueryResult::new(SubqueryKey([T;csubqkeylen]),SubqueryOutput([T, cmaxsubqout]))
         // shard_into_component_promise_results()
         //==>>>>>> https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/storage/tests.rs#L54
-        let results_input = TODO;
+        // let results_input = TODO;
         let mut results_circuit = ComponentCircuitResultsRoot::<Fr>::new(
-            CoreParamsResultRoot { enabled_types, capacity: results_input.subqueries.len() },
+            CoreParamsResultRoot { enabled_types, capacity: num_enabled_subqs },
             (PromiseLoaderParams::new_for_one_shard(200), promise_results_params.clone()),
             rlc_params,
         );
-        results_circuit.feed_input(Box::new(results_input.clone())).expect("feed results");
-        //WIP
-        let promise_results = HashMap::new();
-        results_circuit.fulfill_promise_results(&promise_results).unwrap();
-        results_circuit.calculate_params();
+        // //WIP
+        // results_circuit.feed_input(Box::new(results_input.clone())).expect("feed results");
+        // let promise_results = HashMap::new();
+        // results_circuit.fulfill_promise_results(&promise_results).unwrap();
+        // results_circuit.calculate_params();
     
         // let results_snark =
         //     generate_snark("results_root_for_agg", params, results_circuit, &|pinning| {
@@ -310,7 +312,7 @@ async fn main() {
         //         results_circuit.fulfill_promise_results(&promise_results).unwrap();
         //         results_circuit
         //     })?;
-
+        (results_pk, results_pinning, results_circuit)
     };
 
     let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
