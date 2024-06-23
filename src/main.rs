@@ -27,6 +27,7 @@ use axiom_eth::utils::component::promise_loader::multi::ComponentTypeList;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     //TODO pining for subq aggr circuit
     // type CircuitParams = AggregationConfigParams;
     // type BreakPoints = MultiPhaseThreadBreakPoints;
