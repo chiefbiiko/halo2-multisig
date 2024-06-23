@@ -5,6 +5,7 @@ use std::{
 use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
      utils::{test_fixture, append, prepare, resize_with_first}};
 use axiom_eth::{
+    halo2_proofs::dev::MockProver,
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
     }, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
@@ -403,7 +404,7 @@ async fn main() {
     let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
 
-    let subq_aggr_circuit = InputSubqueryAggregation {
+    let mut subq_aggr_circuit = InputSubqueryAggregation {
         snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // account needs header
         snark_results_root: EnhancedSnark{inner: snark_results, agg_vk_hash_idx:None}, // everything needs results root
         snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}), // account needs header
@@ -417,6 +418,10 @@ async fn main() {
     .expect("subquery aggregation circuit");
 
     //TODO do sth with aggr circuit
+    subq_aggr_circuit.calculate_params(Some(9));
+    let instances = subq_aggr_circuit.instances();
+    MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
+    // subq_aggr_circuit
 
 
     
