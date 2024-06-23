@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, fs::File, io::{Read, Write}, marker::PhantomData
 };
 
-use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
+use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
      utils::{test_fixture, append, prepare, resize_with_first}};
 use axiom_eth::{
     halo2_proofs::dev::MockProver,
@@ -15,7 +15,7 @@ use axiom_eth::{
 
 use axiom_codec::{constants::{
         NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
-    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryType}}};
+    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryResult, SubqueryType}}};
 use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
@@ -318,7 +318,7 @@ async fn main() {
             H256::from_low_u64_be(1) // storage val
         )];
     
-        let mut results = vec![];
+        let mut results: Vec<SubqueryResult> = vec![];
         append(&mut results, &header_subqueries);
         append(&mut results, &acct_subqueries);
         append(&mut results, &storage_subqueries);

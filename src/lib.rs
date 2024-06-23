@@ -1,7 +1,6 @@
-mod circuit;
-mod aggregation;
-mod subquery_aggregation;
-mod constants;
-mod utils;
+pub mod circuit;
+pub mod subquery_aggregation;
+pub mod constants;
+pub mod utils;
 #[cfg(test)]
 mod test;
