@@ -1,4 +1,4 @@
-use axiom_codec::types::field_elements::AnySubqueryResult;
+use axiom_codec::types::{field_elements::AnySubqueryResult, native::{Subquery, SubqueryResult}};
 use axiom_eth::{
     mpt::KECCAK_RLP_EMPTY_STRING,
     providers::setup_provider,
@@ -12,16 +12,15 @@ use axiom_eth::{
 };
 use axiom_query::{
     components::subqueries::{
-        account::{STORAGE_ROOT_INDEX,types::{
+        account::{types::{
         ComponentTypeAccountSubquery, FieldAccountSubqueryCall,
-        }},
-        storage::types::{CircuitInputStorageShard, ComponentTypeStorageSubquery, 
-            CircuitInputStorageSubquery
-        },
+        }, STORAGE_ROOT_INDEX}, common::OutputSubqueryShard, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery
+        }
         // common::{extract_logical_results, extract_virtual_table},
     },
     utils::codec::{AssignedAccountSubquery, AssignedStorageSubquery, AssignedStorageSubqueryResult},
 };
+use itertools::Itertools;
 use crate::constants::*;
 // use crate::types::CircuitInputStorageSubquery;
 use anyhow::{Context as _, Result};
@@ -114,8 +113,8 @@ pub async fn fetch_input(
     rpc: &str,
     safe_address: Address,
     msg_hash: H256,
-    //      circuit_input, storage_root, address, block_number
-) -> Result<(CircuitInputStorageSubquery, H256, H160, u32)> {
+    //      circuit_input, state_root, storage_root, address, block_number
+) -> Result<(CircuitInputStorageSubquery, H256, H256, H256, H160, u32)> {
     let storage_key =
         keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
 
@@ -133,10 +132,11 @@ pub async fn fetch_input(
     };
 
     let block_number: u32 = block.number.unwrap().try_into().unwrap();
+    let state_root = block.state_root;
     Ok((CircuitInputStorageSubquery {
         block_number: block_number.into(),
         proof: json_to_input(block, proof),
-    }, storage_hash.into(), safe_address.into(), block_number))
+    }, state_root, storage_hash.into(), H256::from(storage_key), safe_address.into(), block_number))
 }
 
 // pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>)
@@ -152,25 +152,42 @@ pub async fn fetch_input(
 //     (builder1, builder2)
 // }
 
-#[cfg(test)]
 pub fn to_address(addr: &str) -> Address {
     Address::from(
         const_hex::decode_to_array::<&str, 20>(addr).expect("address"),
     )
 }
 
-#[cfg(test)]
 pub fn to_msg_hash(hash: &str) -> H256 {
     H256::from(const_hex::decode_to_array::<&str, 32>(hash).expect("msg hash"))
 }
 
-#[cfg(test)]
-pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery, H256,H160, u32)> {
+pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery,H256,H256, H256,H160, u32)> {
     fetch_input("https://rpc.gnosis.gateway.fm", to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"), to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7")).await
 }
 
-#[cfg(test)]
 pub async fn get_latest_block_number(network: Chain) -> u64 {
     let provider = setup_provider(network);
     provider.get_block_number().await.unwrap().as_u64()
+}
+
+// subqery results preparation helpers
+pub fn append(
+    results: &mut Vec<SubqueryResult>,
+    subqueries: &[(impl Into<Subquery> + Clone, H256)],
+) {
+    for (s, v) in subqueries {
+        results.push(SubqueryResult { subquery: s.clone().into(), value: v.0.into() })
+    }
+}
+pub fn resize_with_first<T: Clone>(v: &mut Vec<T>, cap: usize) {
+    if cap > 0 {
+        v.resize(cap, v[0].clone());
+    } else {
+        v.clear();
+    }
+}
+pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256> {
+    let results = results.into_iter().map(|(s, v)| AnySubqueryResult::new(s, v)).collect_vec();
+    OutputSubqueryShard { results }
 }

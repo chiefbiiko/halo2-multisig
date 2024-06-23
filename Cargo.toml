@@ -67,6 +67,7 @@ serde_yaml = { version = "0.9.16", optional = true }
 
 
 tokio = { version = "1", features = ["full"] }
+const-hex = "1.11.1"
 
 [dev-dependencies]
 hex = "0.4.3"
@@ -84,7 +85,7 @@ futures = { version = "0.3" }
 blake3 = { version = "=1.5" }
 
 anyhow = "1.0.81"
-const-hex = "1.11.1"
+
 
 # halo2-scaffold = { branch = "feat/0.3.0", git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
 # halo2-scaffold = { path = "../halo2-scaffold" }

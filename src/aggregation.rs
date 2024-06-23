@@ -2,7 +2,8 @@ use std::{
     collections::HashMap, fs::File, io::{Read, Write}, marker::PhantomData
 };
 
-use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation, test, utils::test_fixture};
+use crate::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
+     utils::{test_fixture, append, prepare, resize_with_first}};
 use axiom_eth::{
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
@@ -13,11 +14,15 @@ use axiom_eth::{
 
 use axiom_codec::{constants::{
         NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
-    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, SubqueryType}}};
-use axiom_query::{components::{results::circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
+    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryType}}};
+use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
+use ethers_core::types::{BigEndianHash, H256, U256, Bytes};
+use itertools::Itertools;
+use std::str::FromStr;
+use axiom_eth::utils::component::promise_loader::multi::ComponentTypeList;
 
 #[tokio::main]
 async fn main() {
@@ -138,6 +143,8 @@ async fn main() {
         num_fixed: NUM_FIXED,
     };
 
+    let (subq_input, state_root, storage_root,storage_key, addr, block_number) = test_fixture().await.expect("fixture");
+
     let (storage_pk, storage_pinning, storage_circuit) = {
         let core_params = CoreParamsStorageSubquery {
             capacity: STORAGE_CAPACITY,
@@ -165,7 +172,7 @@ async fn main() {
         );
         // TODO feed input to storage shard - only to storage shard bc it is our entry!?
         // storage_circuit.feed_input(Box::new(input)).unwrap(); whyhow, still probly feed input here??????
-        let (subq_input, storage_hash, addr, block_number) = test_fixture().await.expect("fixture");
+
         //====
         let promise_account = OutputAccountShard {
             results: vec![AnySubqueryResult {
@@ -174,7 +181,7 @@ async fn main() {
                     field_idx: STORAGE_ROOT_INDEX as u32,
                     addr,
                 },
-                value: storage_hash,
+                value: storage_root,
             }],
         };
         //====
@@ -283,8 +290,75 @@ async fn main() {
         );
         let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
     
-        //QUESTION :: do we need to feed input to results root shard?
-        //WIP CircuitInputResultsRootShard
+        //QUESTION :: do we need to feed input to results root shard? => see below
+        
+
+        //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ WIP CircuitInputResultsRootShard
+        let mut header_subqueries = vec![
+            (
+                HeaderSubquery { block_number, field_idx: STATE_ROOT_INDEX as u32 },
+                state_root,
+            ),
+        ];
+        let mut acct_subqueries = vec![(
+            AccountSubquery { block_number, addr, field_idx: STORAGE_ROOT_INDEX as u32 },
+            storage_root,
+        )];
+        let mut storage_subqueries = vec![(
+            StorageSubquery {
+                block_number,
+                addr,
+                slot: U256::from_big_endian(storage_key.as_bytes()),
+            },
+            H256::from_low_u64_be(1) // storage val
+        )];
+    
+        let mut results = vec![];
+        append(&mut results, &header_subqueries);
+        append(&mut results, &acct_subqueries);
+        append(&mut results, &storage_subqueries);
+        resize_with_first(&mut results, COMPONENT_CAPACITY_TOTAL);
+        // let _encoded_subqueries: Vec<Bytes> =
+        //     results.iter().map(|r| r.subquery.encode().into()).collect();
+        let subquery_hashes: Vec<H256> = results.iter().map(|r| r.subquery.keccak()).collect();
+    
+        resize_with_first(&mut header_subqueries, HEADER_CAPACITY);
+        resize_with_first(&mut acct_subqueries, ACCOUNT_CAPACITY);
+        resize_with_first(&mut storage_subqueries, STORAGE_CAPACITY);
+        let promise_header = prepare(header_subqueries);
+        let promise_account = prepare(acct_subqueries);
+        let promise_storage = prepare(storage_subqueries);
+    
+        let mut promise_results = HashMap::new();
+        for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
+            shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
+                promise_header.convert_into(),
+            ),
+            shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
+                promise_account.convert_into(),
+            ),
+            shard_into_component_promise_results::<Fr, ComponentTypeStorageSubquery<Fr>>(
+                promise_storage.convert_into(),
+            ),
+        ]) {
+            // filter out empty shards with capacity = 0.
+            if !pr.shards()[0].1.is_empty() {
+                promise_results.insert(type_id, pr);
+            }
+        }
+    
+        let results_input =  CircuitInputResultsRootShard::<Fr> {
+            subqueries: SubqueryResultsTable::<Fr>::new(
+                results.clone().into_iter().map(|r| r.try_into().unwrap()).collect_vec(),
+            ),
+            num_subqueries: Fr::from(num_enabled_subqs as u64),
+        };
+
+        let logical_results = LogicOutputResultsRoot { results, subquery_hashes, num_subqueries: num_enabled_subqs };
+        //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
+        
+
+
         // SubqueryResultsTable::new(vec![]);
         //FlattenedSubqueryResult::new(SubqueryKey([T;csubqkeylen]),SubqueryOutput([T, cmaxsubqout]))
         // shard_into_component_promise_results()

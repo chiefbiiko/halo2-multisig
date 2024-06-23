@@ -18,6 +18,8 @@ pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
 ];
 /// Index of the storage root in an account node.
 pub const STORAGE_ROOT_INDEX: usize = 2;
+/// Index of the state root in an account node.
+pub const STATE_ROOT_INDEX: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/configs/tests/storage.json#L10
 pub const NUM_RLC_COLUMNS:usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L4
@@ -40,3 +42,5 @@ pub const RESULTS_CAPACITY: usize = 3;
 pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_large.yml#L70
 pub const MAX_EXTRA_DATA_BYTES: usize = 32;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
+pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
