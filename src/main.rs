@@ -151,6 +151,7 @@ async fn main() {
     let (subq_input, state_root, storage_root,storage_key, addr, block_number) = test_fixture().await.expect("fixture");
 
     let (storage_pk, storage_pinning, storage_circuit) = {
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
         let core_params = CoreParamsStorageSubquery {
             capacity: STORAGE_CAPACITY,
             max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
@@ -216,6 +217,7 @@ async fn main() {
     };
    
     let (account_pk, account_pinning, account_circuit) = {
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling account shard");
         let core_params = CoreParamsAccountSubquery {
             capacity: ACCOUNT_CAPACITY,
             max_trie_depth: ACCOUNT_PROOF_MAX_DEPTH,
@@ -246,6 +248,7 @@ async fn main() {
     };
 
     let (header_pk, header_pinning, header_circuit) = {
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery {
             capacity: HEADER_CAPACITY,
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
@@ -274,7 +277,7 @@ async fn main() {
 
 
     let (results_pk, results_pinning, results_circuit) = {
-
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling results shard");
         let mut enabled_types = [false; NUM_SUBQUERY_TYPES];
         enabled_types[SubqueryType::Storage as usize] = true;
         enabled_types[SubqueryType::Account as usize] = true;
@@ -399,11 +402,16 @@ async fn main() {
     );
     let keccak_commit = keccak_merkle.leaves()[0].commit; //???
 
-    let snark_results = gen_snark_shplonk(&kzg_params, &results_pk, results_circuit, Some(&results_circuit_path));
-    let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
-    let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating storage snark");
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating account snark");
+    let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating header snark");
+    let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating results snark");
+    let snark_results = gen_snark_shplonk(&kzg_params, &results_pk, results_circuit, Some(&results_circuit_path));
 
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ creating subquery aggregation cricuit");
     let mut subq_aggr_circuit = InputSubqueryAggregation {
         snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // account needs header
         snark_results_root: EnhancedSnark{inner: snark_results, agg_vk_hash_idx:None}, // everything needs results root
@@ -420,6 +428,7 @@ async fn main() {
     //TODO do sth with aggr circuit
     subq_aggr_circuit.calculate_params(Some(9));
     let instances = subq_aggr_circuit.instances();
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ running mock prover");
     MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
     // subq_aggr_circuit
 
