@@ -326,7 +326,7 @@ async fn main() {
         append(&mut results, &header_subqueries);
         append(&mut results, &acct_subqueries);
         append(&mut results, &storage_subqueries);
-        resize_with_first(&mut results, COMPONENT_CAPACITY_TOTAL);
+        resize_with_first(&mut results, RESULTS_CAPACITY);//COMPONENT_CAPACITY_TOTAL);
         // let _encoded_subqueries: Vec<Bytes> =
         //     results.iter().map(|r| r.subquery.encode().into()).collect();
         let subquery_hashes: Vec<H256> = results.iter().map(|r| r.subquery.keccak()).collect();
