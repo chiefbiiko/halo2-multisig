@@ -151,7 +151,7 @@ async fn main() {
 
     let (subq_input, state_root, storage_root,storage_key, addr, block_number) = test_fixture().await.expect("fixture");
 
-    let (storage_pk, storage_pinning, storage_circuit) = {
+    let (storage_pk, storage_pinning, mut storage_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
         let core_params = CoreParamsStorageSubquery {
             capacity: STORAGE_CAPACITY,
@@ -339,7 +339,7 @@ async fn main() {
         let promise_storage = prepare(storage_subqueries);
     
         let mut promise_results = HashMap::new();
-        let component_type_ids = vec!["axiom-query:ComponentTypeHeaderSubquery","axiom-query:ComponentTypeAccountSubquery", "axiom-query:ComponentTypeStorageSubquery"].into_iter().map(|s| s.to_string());
+        let component_type_ids = vec!["axiom-query:ComponentTypeHeaderSubquery","axiom-query:ComponentTypeAccountSubquery", "axiom-query:ComponentTypeStorageSubquery", "axiom-eth:ComponentTypeKeccak"].into_iter().map(|s| s.to_string());
         // for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
         for (type_id, pr) in component_type_ids.zip_eq([
             shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
@@ -350,6 +350,11 @@ async fn main() {
             ),
             shard_into_component_promise_results::<Fr, ComponentTypeStorageSubquery<Fr>>(
                 promise_storage.convert_into(),
+            ),
+            ComponentPromiseResultsInMerkle::from_single_shard(
+                generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY)
+                    .unwrap()
+                    .into_logical_results(),
             ),
         ]) {
             // filter out empty shards with capacity = 0.
