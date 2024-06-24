@@ -233,14 +233,14 @@ async fn main() {
             lookup_bits: LOOKUP_BITS,
         };
         let keygen_circuit = account_intent.build_keygen_circuit();
-        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &account_pk_path, &account_pinning_path).expect("acnt pk and pinning");
+        let (account_pk, account_pinning) = keygen_circuit.create_pk(&kzg_params, &account_pk_path, &account_pinning_path).expect("acnt pk and pinning");
         let mut vk_file = File::create(&account_vk_path).expect("acnt vk bin file");
-        pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("acnt vk bin write");
+        account_pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("acnt vk bin write");
         //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
         let account_circuit = ComponentCircuitAccountSubquery::<Fr>::prover(
             core_params,
             loader_params,
-            pinning.clone(),
+            account_pinning.clone(),
         );
         //IGNORE for now - think we dont need to feed input to the account component <== OLD
         // account_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
@@ -279,7 +279,7 @@ async fn main() {
         .into_iter()
         .collect();
         account_circuit.fulfill_promise_results(&promises).unwrap();
-        (pk, pinning, account_circuit)
+        (account_pk, account_pinning, account_circuit)
     };
 
     let (header_pk, header_pinning, header_circuit) = {
@@ -296,18 +296,21 @@ async fn main() {
             lookup_bits: LOOKUP_BITS,
         };
         let keygen_circuit = header_intent.build_keygen_circuit();
-        let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
+        let (header_pk, header_pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
-        pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("hdr vk bin write");
+        header_pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("hdr vk bin write");
         //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
         let header_circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
             core_params,
             loader_params,
-            pinning.clone(),
+            header_pinning.clone(),
         );
         //IGNORE for now - think we dont need to feed input to the header component
         // header_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
-        (pk, pinning, header_circuit)
+        //TODO feed header input !!!
+        
+
+        (header_pk, header_pinning, header_circuit)
     };
 
 
