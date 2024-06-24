@@ -339,7 +339,9 @@ async fn main() {
         let promise_storage = prepare(storage_subqueries);
     
         let mut promise_results = HashMap::new();
-        for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
+        let component_type_ids = vec!["axiom-query:ComponentTypeHeaderSubquery","axiom-query:ComponentTypeAccountSubquery", "axiom-query:ComponentTypeStorageSubquery"].into_iter().map(|s| s.to_string());
+        // for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
+        for (type_id, pr) in component_type_ids.zip_eq([
             shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
                 promise_header.convert_into(),
             ),
