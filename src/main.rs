@@ -15,7 +15,7 @@ use axiom_eth::{
 use axiom_codec::{constants::{
         NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
     }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryResult, SubqueryType}}};
-use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, CircuitInputAccountSubquery, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
+use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, CircuitInputAccountSubquery, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::{ComponentTypeHeaderSubquery, OutputHeaderShard}}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -193,25 +193,25 @@ async fn main() {
         //====
         let shard_input = Box::new(CircuitInputStorageShard::<Fr> { requests: vec![strg_subq_input.clone()], _phantom: PhantomData });
         storage_circuit.feed_input(shard_input).unwrap();
-        // let promises = [
-        //     (
-        //         ComponentTypeKeccak::<Fr>::get_type_id(),
-        //         ComponentPromiseResultsInMerkle::from_single_shard(
-        //             generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY)
-        //                 .unwrap()
-        //                 .into_logical_results(),
-        //         ),
-        //     ),
-        //     (
-        //         ComponentTypeAccountSubquery::<Fr>::get_type_id(),
-        //         shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
-        //             promise_account.into(),
-        //         ),
-        //     ),
-        // ]
-        // .into_iter()
-        // .collect();
-        // storage_circuit.fulfill_promise_results(&promises).unwrap();
+        let promises = [
+            (
+                ComponentTypeKeccak::<Fr>::get_type_id(),
+                ComponentPromiseResultsInMerkle::from_single_shard(
+                    generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY)
+                        .unwrap()
+                        .into_logical_results(),
+                ),
+            ),
+            (
+                ComponentTypeAccountSubquery::<Fr>::get_type_id(),
+                shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
+                    promise_account.into(),
+                ),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        storage_circuit.fulfill_promise_results(&promises).unwrap();
         // storage_circuit.calculate_params();
         (pk, pinning, storage_circuit)
     };
@@ -251,6 +251,34 @@ async fn main() {
         };
         let shard_input = Box::new(CircuitInputAccountShard::<Fr> { requests: vec![acct_subq_input], _phantom: PhantomData });
         account_circuit.feed_input(shard_input).unwrap();
+        let promise_header = OutputHeaderShard {
+            results: vec![AnySubqueryResult {
+                subquery: HeaderSubquery {
+                    block_number,
+                    field_idx: STATE_ROOT_INDEX as u32,
+                },
+                value: state_root,
+            }],
+        };
+        let promises = [
+            (
+                ComponentTypeKeccak::<Fr>::get_type_id(),
+                ComponentPromiseResultsInMerkle::from_single_shard(
+                    generate_keccak_shards_from_calls(&account_circuit, KECCAK_F_CAPACITY)
+                        .unwrap()
+                        .into_logical_results(),
+                ),
+            ),
+            (
+                ComponentTypeAccountSubquery::<Fr>::get_type_id(),
+                shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
+                    promise_header.into(),
+                ),
+            ),
+        ]
+        .into_iter()
+        .collect();
+        account_circuit.fulfill_promise_results(&promises).unwrap();
         (pk, pinning, account_circuit)
     };
 
