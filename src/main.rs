@@ -213,7 +213,7 @@ async fn main() {
         .into_iter()
         .collect();
         storage_circuit.fulfill_promise_results(&promises).unwrap();
-        storage_circuit.calculate_params();
+        // storage_circuit.calculate_params();
         (pk, pinning, storage_circuit)
     };
    
