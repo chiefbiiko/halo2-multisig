@@ -21,6 +21,7 @@ use axiom_query::{
     utils::codec::{AssignedAccountSubquery, AssignedStorageSubquery, AssignedStorageSubqueryResult},
 };
 use itertools::Itertools;
+use rlp::RlpStream;
 use crate::constants::*;
 // use crate::types::CircuitInputStorageSubquery;
 use anyhow::{Context as _, Result};
@@ -33,6 +34,8 @@ use ethers_core::types::{Address, Block, EIP1186ProofResponse, H160,H256,Chain};
 use ethers_providers::{Middleware, Provider};
 use tiny_keccak::{Hasher, Keccak};
 // use crate::Field;
+
+use zerocopy::AsBytes;
 
 pub(crate) fn extract_virtual_table<
     F: Field,
@@ -113,8 +116,8 @@ pub async fn fetch_input(
     rpc: &str,
     safe_address: Address,
     msg_hash: H256,
-    //      circuit_input, state_root, storage_root, address, block_number
-) -> Result<(CircuitInputStorageSubquery, H256, H256, H256, H160, u32)> {
+    //      circuit_input, state_root, storage_root, address, block_number, header_rlp
+) -> Result<(CircuitInputStorageSubquery, H256, H256, H256, H160, u32, Vec<u8>)> {
     let storage_key =
         keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
 
@@ -133,10 +136,11 @@ pub async fn fetch_input(
 
     let block_number: u32 = block.number.unwrap().try_into().unwrap();
     let state_root = block.state_root;
+    let header_rlp = rlp_encode_header(&block);
     Ok((CircuitInputStorageSubquery {
         block_number: block_number.into(),
         proof: json_to_input(block, proof),
-    }, state_root, storage_hash.into(), H256::from(storage_key), safe_address.into(), block_number))
+    }, state_root, storage_hash.into(), H256::from(storage_key), safe_address.into(), block_number, header_rlp))
 }
 
 // pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>)
@@ -162,7 +166,7 @@ pub fn to_msg_hash(hash: &str) -> H256 {
     H256::from(const_hex::decode_to_array::<&str, 32>(hash).expect("msg hash"))
 }
 
-pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery,H256,H256, H256,H160, u32)> {
+pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery,H256,H256, H256,H160, u32, Vec<u8>)> {
     fetch_input("https://rpc.gnosis.gateway.fm", to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"), to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7")).await
 }
 
@@ -190,4 +194,36 @@ pub fn resize_with_first<T: Clone>(v: &mut Vec<T>, cap: usize) {
 pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256> {
     let results = results.into_iter().map(|(s, v)| AnySubqueryResult::new(s, v)).collect_vec();
     OutputSubqueryShard { results }
+}
+
+// https://ethereum.stackexchange.com/a/67332
+// https://github.com/ethereum/go-ethereum/blob/14eb8967be7acc54c5dc9a416151ac45c01251b6/core/types/block.go#L65
+pub fn rlp_encode_header(block: &Block<H256>) -> Vec<u8> {
+    let mut rlp = RlpStream::new();
+    rlp.begin_list(20);
+    rlp.append(&block.parent_hash);
+    rlp.append(&block.uncles_hash);
+    rlp.append(&block.author.expect("author"));
+    rlp.append(&block.state_root);
+    rlp.append(&block.transactions_root);
+    rlp.append(&block.receipts_root);
+    rlp.append(&block.logs_bloom.expect("logs_bloom"));
+    rlp.append(&block.difficulty);
+    rlp.append(&block.number.expect("number"));
+    rlp.append(&block.gas_limit);
+    rlp.append(&block.gas_used);
+    rlp.append(&block.timestamp);
+    rlp.append(&block.extra_data.as_bytes().to_vec());
+    rlp.append(&block.mix_hash.expect("mix_hash"));
+    rlp.append(&block.nonce.expect("nonce"));
+    rlp.append(&block.base_fee_per_gas.expect("base_fee_per_gas")); // london
+    rlp.append(&block.withdrawals_root.expect("withdrawals_root")); // shanghai
+    rlp.append(&block.blob_gas_used.expect("blob_gas_used")); // cancun
+    rlp.append(&block.excess_blob_gas.expect("excess_blob_gas")); // cancun
+    rlp.append(
+        &block
+            .parent_beacon_block_root
+            .expect("parent_beacon_block_root"),
+    ); // cancun
+    rlp.out().freeze().into()
 }

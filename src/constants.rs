@@ -35,7 +35,7 @@ pub const STORAGE_CAPACITY: usize = 1;
 //NOTE we only do a single storage proof at a time
 pub const ACCOUNT_CAPACITY: usize = 1;
 //GUESS
-pub const HEADER_CAPACITY: usize = 132;
+pub const HEADER_CAPACITY: usize = 1;//132;
 //GUESS
 pub const RESULTS_CAPACITY: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/types.rs#L76
@@ -44,3 +44,5 @@ pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
 pub const MAX_EXTRA_DATA_BYTES: usize = 32;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
 pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
+//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/mod.rs#L46
+pub const MMR_MAX_NUM_PEAKS: usize = 32; // assuming block number stays in u32, < 2^32
