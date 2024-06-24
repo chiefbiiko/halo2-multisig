@@ -5,10 +5,9 @@ use std::{
 use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
      utils::{test_fixture, append, prepare, resize_with_first}};
 use axiom_eth::{
-    halo2_proofs::dev::MockProver,
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
-    }, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
+    }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, providers::block, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
         }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType, SelectedDataShardsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
@@ -16,7 +15,7 @@ use axiom_eth::{
 use axiom_codec::{constants::{
         NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
     }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryResult, SubqueryType}}};
-use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
+use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, CircuitInputAccountSubquery, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::ComponentTypeHeaderSubquery}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
 use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
 use axiom_eth::utils::component::ComponentCircuit;
@@ -149,7 +148,7 @@ async fn main() {
         num_fixed: NUM_FIXED,
     };
 
-    let (subq_input, state_root, storage_root,storage_key, addr, block_number) = test_fixture().await.expect("fixture");
+    let (strg_subq_input, state_root, storage_root,storage_key, addr, block_number) = test_fixture().await.expect("fixture");
 
     let (storage_pk, storage_pinning, mut storage_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
@@ -192,7 +191,7 @@ async fn main() {
             }],
         };
         //====
-        let shard_input = Box::new(CircuitInputStorageShard::<Fr> { requests: vec![subq_input], _phantom: PhantomData });
+        let shard_input = Box::new(CircuitInputStorageShard::<Fr> { requests: vec![strg_subq_input.clone()], _phantom: PhantomData });
         storage_circuit.feed_input(shard_input).unwrap();
         // let promises = [
         //     (
@@ -245,8 +244,12 @@ async fn main() {
         );
         //IGNORE for now - think we dont need to feed input to the account component <== OLD
         // account_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
-        let acct_subq_input = TODO;
-        let shard_input = Box::new(CircuitInputAccountShard::<Fr> { requests: vec![subq_input], _phantom: PhantomData });
+        let acct_subq_input = CircuitInputAccountSubquery {
+            block_number: block_number as u64,
+            field_idx: STATE_ROOT_INDEX as u32,
+            proof: strg_subq_input.proof
+        };
+        let shard_input = Box::new(CircuitInputAccountShard::<Fr> { requests: vec![acct_subq_input], _phantom: PhantomData });
         account_circuit.feed_input(shard_input).unwrap();
         (pk, pinning, account_circuit)
     };
