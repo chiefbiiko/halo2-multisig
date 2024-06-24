@@ -270,7 +270,7 @@ async fn main() {
                 ),
             ),
             (
-                ComponentTypeAccountSubquery::<Fr>::get_type_id(),
+                ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
                 shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
                     promise_header.into(),
                 ),
