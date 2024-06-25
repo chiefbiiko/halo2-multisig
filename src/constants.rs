@@ -35,7 +35,7 @@ pub const STORAGE_CAPACITY: usize = 1;
 //NOTE we only do a single storage proof at a time
 pub const ACCOUNT_CAPACITY: usize = 1;
 //GUESS
-pub const HEADER_CAPACITY: usize = 1;//132;
+pub const HEADER_CAPACITY: usize = 132;//1;//132;
 //GUESS
 pub const RESULTS_CAPACITY: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/types.rs#L76

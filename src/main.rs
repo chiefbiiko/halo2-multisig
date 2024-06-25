@@ -5,7 +5,7 @@ use std::{
 use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
      utils::{append, mmr_1, prepare, resize_with_first, test_fixture, Halo2MultisigInput}};
 use axiom_eth::{
-    halo2_base::{
+    block_header::get_block_header_rlp_max_lens_from_extra, halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
     }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, providers::block, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, storage::circuit::EthStorageInput, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
@@ -303,6 +303,15 @@ let strg_subq_input = CircuitInputStorageSubquery {
             k: K as u32,
             lookup_bits: LOOKUP_BITS,
         };
+
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
+        log::info!("actual header_rlp len, {}", header_rlp.len());
+        let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
+        log::info!("expected header_rlp_max_bytes, {}", header_rlp_max_bytes);
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
+        
         let keygen_circuit = header_intent.build_keygen_circuit();
         let (header_pk, header_pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
