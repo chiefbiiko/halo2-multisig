@@ -46,3 +46,7 @@ pub const MAX_EXTRA_DATA_BYTES: usize = 32;
 pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/mod.rs#L46
 pub const MMR_MAX_NUM_PEAKS: usize = 32; // assuming block number stays in u32, < 2^32
+// Merkle Mountain Range size for a tree range with one leaf
+pub const MMR_SIZE_1: [u8; 32] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3];
+// 32 zero bytes
+pub const ZERO_32: [u8; 32] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];

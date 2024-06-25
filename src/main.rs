@@ -3,7 +3,7 @@ use std::{
 };
 
 use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
-     utils::{test_fixture, append, prepare, resize_with_first}};
+     utils::{append, mmr_1, prepare, resize_with_first, test_fixture}};
 use axiom_eth::{
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
@@ -27,9 +27,12 @@ use axiom_eth::utils::component::promise_loader::multi::ComponentTypeList;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    //TODO pining for subq aggr circuit
-    // type CircuitParams = AggregationConfigParams;
-    // type BreakPoints = MultiPhaseThreadBreakPoints;
+
+    // let leaf = const_hex::decode_to_array::<&str, 32>("0x771613cbfcfea7fb8685dcfda02e8048408938769da3fb1d79ed5052cb97a885").expect("leaf");
+    // let (root, proof) = mmr_1(leaf.into());
+    // log::info!("{},,, {:?}", const_hex::encode(&root), proof.into_iter().map(|p| const_hex::encode(p)));
+    // return;
+
     let subq_aggr_params =         AggregationConfigParams {
         degree: K as u32,
         lookup_bits:LOOKUP_BITS,

@@ -227,3 +227,11 @@ pub fn rlp_encode_header(block: &Block<H256>) -> Vec<u8> {
     ); // cancun
     rlp.out().freeze().into()
 }
+
+/// Computes the Merkle Mountain Range root and proof for a single leaf.
+pub fn mmr_1(leaf: H256) -> (H256, Vec<H256>) {
+    let peak = keccak256(&concat_bytes64([0u8; 32], leaf.into()));
+    let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+    let proof = vec![ZERO_32.into(), peak.into()];
+    (root, proof)
+}
