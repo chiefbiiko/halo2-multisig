@@ -1,14 +1,10 @@
 use axiom_codec::types::{field_elements::AnySubqueryResult, native::{Subquery, SubqueryResult}};
 use axiom_eth::{
-    mpt::KECCAK_RLP_EMPTY_STRING,
-    providers::setup_provider,
-    Field,
-    halo2_base::AssignedValue,
-    utils::component::{
+    halo2_base::AssignedValue, mpt::KECCAK_RLP_EMPTY_STRING, providers::{block::get_block_rlp, setup_provider}, utils::component::{
         types::{FixLenLogical, Flatten},
         utils::get_logical_value,
          ComponentType, FlattenVirtualTable, LogicalResult,
-    },
+    }, Field
 };
 use axiom_query::{
     components::subqueries::{
@@ -151,7 +147,11 @@ pub async fn fetch_input(
     let block_number: u32 = block.number.unwrap().try_into().unwrap();
     let block_hash = block.hash.expect("block hash");
     let state_root = block.state_root;
-    let header_rlp = rlp_encode_header(&block);
+
+    //WIP
+    // let header_rlp = rlp_encode_header(&block);
+    let header_rlp  = get_block_rlp(&block);
+    
     // Ok((
     // //     CircuitInputStorageSubquery {
     // //     block_number: block_number.into(),
@@ -224,37 +224,37 @@ pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256
     OutputSubqueryShard { results }
 }
 
-// https://ethereum.stackexchange.com/a/67332
-// https://github.com/ethereum/go-ethereum/blob/14eb8967be7acc54c5dc9a416151ac45c01251b6/core/types/block.go#L65
-pub fn rlp_encode_header(block: &Block<H256>) -> Vec<u8> {
-    let mut rlp = RlpStream::new();
-    rlp.begin_list(20);
-    rlp.append(&block.parent_hash);
-    rlp.append(&block.uncles_hash);
-    rlp.append(&block.author.expect("author"));
-    rlp.append(&block.state_root);
-    rlp.append(&block.transactions_root);
-    rlp.append(&block.receipts_root);
-    rlp.append(&block.logs_bloom.expect("logs_bloom"));
-    rlp.append(&block.difficulty);
-    rlp.append(&block.number.expect("number"));
-    rlp.append(&block.gas_limit);
-    rlp.append(&block.gas_used);
-    rlp.append(&block.timestamp);
-    rlp.append(&block.extra_data.as_bytes().to_vec());
-    rlp.append(&block.mix_hash.expect("mix_hash"));
-    rlp.append(&block.nonce.expect("nonce"));
-    rlp.append(&block.base_fee_per_gas.expect("base_fee_per_gas")); // london
-    rlp.append(&block.withdrawals_root.expect("withdrawals_root")); // shanghai
-    rlp.append(&block.blob_gas_used.expect("blob_gas_used")); // cancun
-    rlp.append(&block.excess_blob_gas.expect("excess_blob_gas")); // cancun
-    rlp.append(
-        &block
-            .parent_beacon_block_root
-            .expect("parent_beacon_block_root"),
-    ); // cancun
-    rlp.out().freeze().into()
-}
+// // https://ethereum.stackexchange.com/a/67332
+// // https://github.com/ethereum/go-ethereum/blob/14eb8967be7acc54c5dc9a416151ac45c01251b6/core/types/block.go#L65
+// pub fn rlp_encode_header(block: &Block<H256>) -> Vec<u8> {
+//     let mut rlp = RlpStream::new();
+//     rlp.begin_list(20);
+//     rlp.append(&block.parent_hash);
+//     rlp.append(&block.uncles_hash);
+//     rlp.append(&block.author.expect("author"));
+//     rlp.append(&block.state_root);
+//     rlp.append(&block.transactions_root);
+//     rlp.append(&block.receipts_root);
+//     rlp.append(&block.logs_bloom.expect("logs_bloom"));
+//     rlp.append(&block.difficulty);
+//     rlp.append(&block.number.expect("number"));
+//     rlp.append(&block.gas_limit);
+//     rlp.append(&block.gas_used);
+//     rlp.append(&block.timestamp);
+//     rlp.append(&block.extra_data.as_bytes().to_vec());
+//     rlp.append(&block.mix_hash.expect("mix_hash"));
+//     rlp.append(&block.nonce.expect("nonce"));
+//     rlp.append(&block.base_fee_per_gas.expect("base_fee_per_gas")); // london
+//     rlp.append(&block.withdrawals_root.expect("withdrawals_root")); // shanghai
+//     rlp.append(&block.blob_gas_used.expect("blob_gas_used")); // cancun
+//     rlp.append(&block.excess_blob_gas.expect("excess_blob_gas")); // cancun
+//     rlp.append(
+//         &block
+//             .parent_beacon_block_root
+//             .expect("parent_beacon_block_root"),
+//     ); // cancun
+//     rlp.out().freeze().into()
+// }
 
 /// Computes the Merkle Mountain Range root and proof for a single leaf.
 pub fn mmr_1(leaf: H256) -> (H256, H256, Vec<H256>) {
