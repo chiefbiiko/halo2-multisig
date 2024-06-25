@@ -22,6 +22,7 @@ use axiom_query::{
 };
 use itertools::Itertools;
 use rlp::RlpStream;
+use serde::{Serialize, Deserialize};
 use crate::constants::*;
 // use crate::types::CircuitInputStorageSubquery;
 use anyhow::{Context as _, Result};
@@ -112,12 +113,25 @@ pub fn json_to_input(
     input
 }
 
+/// Simple wrapper holding all component input data
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Halo2MultisigInput {
+    pub eth_storage_input: EthStorageInput,
+    pub state_root: H256, 
+    pub storage_root: H256, 
+    pub storage_key: H256,
+     pub address: H160, 
+     pub block_number: u32,
+     pub block_hash: H256,
+    pub header_rlp: Vec<u8>
+}
+
 pub async fn fetch_input(
     rpc: &str,
     safe_address: Address,
     msg_hash: H256,
     //      circuit_input, state_root, storage_root, address, block_number, header_rlp
-) -> Result<(CircuitInputStorageSubquery, H256, H256, H256, H160, u32, Vec<u8>)> {
+) -> Result<Halo2MultisigInput> {
     let storage_key =
         keccak256(&concat_bytes64(msg_hash.into(), SAFE_SIGNED_MESSAGES_SLOT));
 
@@ -135,12 +149,26 @@ pub async fn fetch_input(
     };
 
     let block_number: u32 = block.number.unwrap().try_into().unwrap();
+    let block_hash = block.hash.expect("block hash");
     let state_root = block.state_root;
     let header_rlp = rlp_encode_header(&block);
-    Ok((CircuitInputStorageSubquery {
-        block_number: block_number.into(),
-        proof: json_to_input(block, proof),
-    }, state_root, storage_hash.into(), H256::from(storage_key), safe_address.into(), block_number, header_rlp))
+    // Ok((
+    // //     CircuitInputStorageSubquery {
+    // //     block_number: block_number.into(),
+    // //     proof: json_to_input(block, proof),
+    // // }, 
+    // json_to_input(block, proof),
+    // state_root, storage_hash.into(), H256::from(storage_key), safe_address.into(), block_number, header_rlp))
+    Ok(Halo2MultisigInput {
+        eth_storage_input: json_to_input(block, proof),
+        state_root, 
+        storage_root: storage_hash.into(), 
+        storage_key: H256::from(storage_key),
+         address: safe_address, 
+         block_number,
+         block_hash,
+          header_rlp
+    })
 }
 
 // pub fn rlc_builderz<F: Field>() -> (RlcCircuitBuilder<F>, RlcCircuitBuilder<F>)
@@ -166,7 +194,7 @@ pub fn to_msg_hash(hash: &str) -> H256 {
     H256::from(const_hex::decode_to_array::<&str, 32>(hash).expect("msg hash"))
 }
 
-pub async fn test_fixture() -> Result<(CircuitInputStorageSubquery,H256,H256, H256,H160, u32, Vec<u8>)> {
+pub async fn test_fixture() -> Result<Halo2MultisigInput> {
     fetch_input("https://rpc.gnosis.gateway.fm", to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"), to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7")).await
 }
 

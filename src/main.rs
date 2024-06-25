@@ -3,11 +3,11 @@ use std::{
 };
 
 use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
-     utils::{append, mmr_1, prepare, resize_with_first, test_fixture}};
+     utils::{append, mmr_1, prepare, resize_with_first, test_fixture, Halo2MultisigInput}};
 use axiom_eth::{
     halo2_base::{
         gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
-    }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, providers::block, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, utils::{build_utils::pinning::{
+    }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, providers::block, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, storage::circuit::EthStorageInput, utils::{build_utils::pinning::{
             aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
         }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType, SelectedDataShardsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
 };
@@ -150,8 +150,13 @@ async fn main() {
         num_lookup_advice: NUM_LOOKUP_ADVICE,
         num_fixed: NUM_FIXED,
     };
+//strg_subq_input, state_root, storage_root,storage_key, addr, block_number, header_rlp
+let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash, header_rlp} = test_fixture().await.expect("fixture");
 
-    let (strg_subq_input, state_root, storage_root,storage_key, addr, block_number, header_rlp) = test_fixture().await.expect("fixture");
+let strg_subq_input = CircuitInputStorageSubquery {
+    block_number: block_number as u64,
+    proof: eth_storage_input
+};
 
     let (storage_pk, storage_pinning, mut storage_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
@@ -311,6 +316,10 @@ async fn main() {
         //IGNORE for now - think we dont need to feed input to the header component
         // header_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
         //TODO feed header input !!!
+
+        //TODO
+
+
         let input_subquery = CircuitInputHeaderSubquery {
             header_rlp,
             mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1], //FIXME TODO undefault
