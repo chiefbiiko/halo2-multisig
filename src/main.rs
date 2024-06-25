@@ -151,7 +151,9 @@ async fn main() {
         num_fixed: NUM_FIXED,
     };
 //strg_subq_input, state_root, storage_root,storage_key, addr, block_number, header_rlp
-let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash, header_rlp} = test_fixture().await.expect("fixture");
+let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash,mut header_rlp} = test_fixture().await.expect("fixture");
+let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
+header_rlp.resize(header_rlp_max_bytes, 0_u8);
 
 let strg_subq_input = CircuitInputStorageSubquery {
     block_number: block_number as u64,
