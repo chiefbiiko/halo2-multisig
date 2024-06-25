@@ -311,7 +311,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         log::info!("expected header_rlp_max_bytes, {}", header_rlp_max_bytes);
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
-        
+
         let keygen_circuit = header_intent.build_keygen_circuit();
         let (header_pk, header_pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
@@ -322,25 +322,28 @@ let strg_subq_input = CircuitInputStorageSubquery {
             loader_params,
             header_pinning.clone(),
         );
-        //IGNORE for now - think we dont need to feed input to the header component
-        // header_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
-        //TODO feed header input !!!
 
-        //TODO
+        //NOTE preparing header shard input incl block hash mmr proof
+        // mmr of single block hash
+        let (mmr_root, mmr_peak, mut mmr_proof) = mmr_1(block_hash);
 
+        mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
+        let mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
 
         let input_subquery = CircuitInputHeaderSubquery {
             header_rlp,
-            mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1], //FIXME TODO undefault
+            mmr_proof,
+            // mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1],
             field_idx: 0,
         };
-        // mmr bagging
-        // aka collapsing multiple mountain range *peaks* to a single root
-        // P = Blake2b(N | Blake2b(N | Node(p3) | Node(p2)) | Node(p1))
-        //TODO ✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ ✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ COMEBACK with mmr root and proof !!
+        
+        let mut mmr_peaks = vec![mmr_peak];
+        mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
+        let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
+
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
-            // requests: vec![acct_subq_input],
-            mmr: [H256::zero(); MMR_MAX_NUM_PEAKS], //FIXME TODO undefault
+            mmr: mmr_peaks,
+            // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
             requests: vec![input_subquery; HEADER_CAPACITY],
             _phantom: PhantomData,
         });
@@ -499,7 +502,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         // passing input to results root sharrd circuit
         results_circuit.feed_input(results_input).expect("feed results");
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
-        results_circuit.calculate_params();
+        // results_circuit.calculate_params();
     
         (results_pk, results_pinning, results_circuit)
     };
@@ -541,7 +544,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
     MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
     // subq_aggr_circuit
 
-
+    
     
     //???????? SOME QUESTIONS
     // - how to aggregate from component storage circuit to evm verifier circuit?
