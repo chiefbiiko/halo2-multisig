@@ -157,7 +157,7 @@ header_rlp.resize(header_rlp_max_bytes, 0_u8);
 
 let strg_subq_input = CircuitInputStorageSubquery {
     block_number: block_number as u64,
-    proof: eth_storage_input
+    proof: eth_storage_input.clone()
 };
 
     let (storage_pk, storage_pinning, mut storage_circuit) = {
@@ -257,7 +257,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         let acct_subq_input = CircuitInputAccountSubquery {
             block_number: block_number as u64,
             field_idx: STATE_ROOT_INDEX as u32,
-            proof: strg_subq_input.proof
+            proof: eth_storage_input
         };
         let shard_input = Box::new(CircuitInputAccountShard::<Fr> { requests: vec![acct_subq_input], _phantom: PhantomData });
         account_circuit.feed_input(shard_input).unwrap();
