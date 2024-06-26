@@ -42,8 +42,8 @@ pub const RESULTS_CAPACITY: usize = 3;
 pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_large.yml#L70
 pub const MAX_EXTRA_DATA_BYTES: usize = 32;
-//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
-pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
+// //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
+// pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/mod.rs#L46
 pub const MMR_MAX_NUM_PEAKS: usize = 32; // assuming block number stays in u32, < 2^32
 // Merkle Mountain Range size for a tree range with one leaf
