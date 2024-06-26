@@ -234,7 +234,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         };
         let loader_params = (
             PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
-            PromiseLoaderParams::new_for_one_shard(HEADER_CAPACITY),
+            PromiseLoaderParams::new_for_one_shard(132), //HEADER_CAPACITY),
         );
         let account_intent = ShardIntentAccount {
             core_params: core_params.clone(),
@@ -295,7 +295,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery {
-            capacity: HEADER_CAPACITY,
+            capacity: 132, //HEADER_CAPACITY,
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
         };
         let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
@@ -346,7 +346,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
-            requests: vec![input_subquery; HEADER_CAPACITY],
+            requests: vec![input_subquery; HEADER_CAPACITY], //MAGIC HEADER_CAPACITY],
             _phantom: PhantomData,
         });
         header_circuit.feed_input(shard_input).unwrap();
@@ -437,7 +437,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         //     results.iter().map(|r| r.subquery.encode().into()).collect();
         let subquery_hashes: Vec<H256> = results.iter().map(|r| r.subquery.keccak()).collect();
     
-        resize_with_first(&mut header_subqueries, HEADER_CAPACITY);
+        resize_with_first(&mut header_subqueries, HEADER_CAPACITY); //MAGIC HEADER_CAPACITY);
         resize_with_first(&mut acct_subqueries, ACCOUNT_CAPACITY);
         resize_with_first(&mut storage_subqueries, STORAGE_CAPACITY);
         let promise_header = prepare(header_subqueries);
@@ -483,7 +483,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         let single_promise_loader = PromiseLoaderParams::new_for_one_shard(200);
         let results_intent = ShardIntentResultsRoot {
             core_params: CoreParamsResultRoot {
-                capacity: HEADER_CAPACITY,
+                capacity: RESULTS_CAPACITY,
                 enabled_types
             },
             loader_params: (single_promise_loader.clone(), promise_results_params.clone()),
