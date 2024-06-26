@@ -331,7 +331,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
 
         mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
         let mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
-
+        log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
         let input_subquery = CircuitInputHeaderSubquery {
             header_rlp,
             mmr_proof,
@@ -342,7 +342,7 @@ let strg_subq_input = CircuitInputStorageSubquery {
         let mut mmr_peaks = vec![mmr_peak];
         mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
         let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-
+        log::info!("mmr_peaks[0] 0x{}", const_hex::encode(&mmr_peaks[0]));
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
