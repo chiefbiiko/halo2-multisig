@@ -327,8 +327,16 @@ let strg_subq_input = CircuitInputStorageSubquery {
 
         //NOTE preparing header shard input incl block hash mmr proof
         // mmr of single block hash
-        let (mmr_root, mmr_peak, mut mmr_proof) = mmr_1(block_hash);
-
+        let (mmr_root, mmr_peak, mut mmr_proof) = mmr_1(&block_hash);
+        log::info!("mmr_leaf: {} \
+mmr_proof: {:?} \
+mmr_peak: {} \
+mmr_root: {}", 
+const_hex::encode(&block_hash),
+mmr_proof.into_iter().map(|n| const_hex::encode(n)).collect::<Vec<String>>(),
+const_hex::encode(&mmr_peak),
+const_hex::encode(&mmr_root)
+);
         mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
         let mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
         log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
