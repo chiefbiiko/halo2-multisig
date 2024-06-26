@@ -432,14 +432,16 @@ let strg_subq_input = CircuitInputStorageSubquery {
         append(&mut results, &header_subqueries);
         append(&mut results, &acct_subqueries);
         append(&mut results, &storage_subqueries);
-        resize_with_first(&mut results, RESULTS_CAPACITY);//COMPONENT_CAPACITY_TOTAL);
+        results.truncate(32); //MAGIC TOTAL_CAPACITY
+        let num_subqueries = results.len();
+        resize_with_first(&mut results, 32);//MAGIC RESULTS_CAPACITY COMPONENT_CAPACITY_TOTAL);
         // let _encoded_subqueries: Vec<Bytes> =
         //     results.iter().map(|r| r.subquery.encode().into()).collect();
         let subquery_hashes: Vec<H256> = results.iter().map(|r| r.subquery.keccak()).collect();
     
-        resize_with_first(&mut header_subqueries, HEADER_CAPACITY); //MAGIC HEADER_CAPACITY);
-        resize_with_first(&mut acct_subqueries, ACCOUNT_CAPACITY);
-        resize_with_first(&mut storage_subqueries, STORAGE_CAPACITY);
+        resize_with_first(&mut header_subqueries, 32); //MAGIC HEADER_CAPACITY);
+        resize_with_first(&mut acct_subqueries, 8); //MAGIC ACCOUNT_CAPACITY
+        resize_with_first(&mut storage_subqueries, 8); //MAGIC STORAGE_CAPACITY
         let promise_header = prepare(header_subqueries);
         let promise_account = prepare(acct_subqueries);
         let promise_storage = prepare(storage_subqueries);
@@ -473,10 +475,10 @@ let strg_subq_input = CircuitInputStorageSubquery {
             subqueries: SubqueryResultsTable::<Fr>::new(
                 results.clone().into_iter().map(|r| r.try_into().unwrap()).collect_vec(),
             ),
-            num_subqueries: Fr::from(num_enabled_subqs as u64),
+            num_subqueries: Fr::from(num_subqueries as u64),
         });
 
-        let logical_results = LogicOutputResultsRoot { results, subquery_hashes, num_subqueries: num_enabled_subqs };
+        let logical_results = LogicOutputResultsRoot { results, subquery_hashes, num_subqueries };
         //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
         
         //
