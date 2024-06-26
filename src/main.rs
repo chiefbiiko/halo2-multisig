@@ -333,7 +333,7 @@ mmr_proof: {:?} \
 mmr_peak: {} \
 mmr_root: {}", 
 const_hex::encode(&block_hash),
-mmr_proof.into_iter().map(|n| const_hex::encode(n)).collect::<Vec<String>>(),
+mmr_proof.clone().into_iter().map(|n| const_hex::encode(n)).collect::<Vec<String>>(),
 const_hex::encode(&mmr_peak),
 const_hex::encode(&mmr_root)
 );
