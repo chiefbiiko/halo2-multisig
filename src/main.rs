@@ -270,23 +270,7 @@ const_hex::encode(&mmr_root)
             field_idx: STATE_ROOT_INDEX as u32,
         };
 
-        //WIP prepend a magic number of zeros like the header test does
-        let mut mmr_peaks = vec![
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            H256::zero(),
-            mmr_peak,
-        ];
+        let mut mmr_peaks = vec![ mmr_peak ];
         mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
         let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
         log::info!("mmr_peaks {:?}", &mmr_peaks);
