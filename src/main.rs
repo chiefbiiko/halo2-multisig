@@ -350,7 +350,7 @@ const_hex::encode(&mmr_root)
         let mut mmr_peaks = vec![mmr_peak];
         mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
         let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-        log::info!("mmr_peaks[0] 0x{}", const_hex::encode(&mmr_peaks[0]));
+        log::info!("mmr_peaks {:?}", mmr_peaks.clone().into_iter().map(|p| const_hex::encode(p)).collect::<Vec<String>>());
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
