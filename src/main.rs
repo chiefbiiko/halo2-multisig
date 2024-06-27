@@ -273,7 +273,7 @@ const_hex::encode(&mmr_root)
             header_rlp,
             mmr_proof,
             // mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1],
-            field_idx: 0,
+            field_idx: STATE_ROOT_INDEX as u32,
         };
         
         let mut mmr_peaks = vec![mmr_peak];
