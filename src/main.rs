@@ -227,7 +227,7 @@ header_rlp.resize(header_rlp_max_bytes, 0_u8);
             capacity: HEADER_CAPACITY,// 132, //HEADER_CAPACITY,
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
         };
-        let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
+        let loader_params= PromiseLoaderParams::new_for_one_shard(200);//MAGIC KECCAK_F_CAPACITY);
         let header_intent = ShardIntentHeader {
             core_params: core_params.clone(),
             loader_params: loader_params.clone(),
@@ -300,7 +300,7 @@ const_hex::encode(&mmr_root)
             (
                 ComponentTypeKeccak::<Fr>::get_type_id(),
                 ComponentPromiseResultsInMerkle::from_single_shard(
-                    generate_keccak_shards_from_calls(&header_circuit, KECCAK_F_CAPACITY)
+                    generate_keccak_shards_from_calls(&header_circuit, 200) //MAGIC KECCAK_F_CAPACITY)
                         .unwrap()
                         .into_logical_results(),
                 ),
