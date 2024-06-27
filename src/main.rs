@@ -526,12 +526,12 @@ const_hex::encode(&mmr_root)
     );
     let keccak_commit = keccak_merkle.leaves()[0].commit; //???
 
-    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating header snark");
-    let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
-    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating account snark");
-    let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating storage snark");
     let snark_storage = gen_snark_shplonk(&kzg_params, &storage_pk, storage_circuit, Some(&storage_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating account snark");
+    let snark_account = gen_snark_shplonk(&kzg_params, &account_pk, account_circuit, Some(&account_circuit_path));
+    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating header snark");
+    let snark_header = gen_snark_shplonk(&kzg_params, &header_pk, header_circuit, Some(&header_circuit_path));
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ generating results snark");
     let snark_results = gen_snark_shplonk(&kzg_params, &results_pk, results_circuit, Some(&results_circuit_path));
 
