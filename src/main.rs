@@ -80,8 +80,10 @@ async fn main() {
     let kzg_params = gen_srs(K.try_into().unwrap());
 
 let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash,mut header_rlp} = test_fixture().await.expect("fixture");
-let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
+let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);//TODO use constant from upstream
+log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ before resize header_rlp len, {}", header_rlp.len());
 header_rlp.resize(header_rlp_max_bytes, 0_u8);
+log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize header_rlp len, {}", header_rlp.len());
 
     let (storage_pk, storage_pinning, mut storage_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
@@ -235,14 +237,6 @@ header_rlp.resize(header_rlp_max_bytes, 0_u8);
             lookup_bits: LOOKUP_BITS,
         };
 
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
-        log::info!("actual header_rlp len, {}", header_rlp.len());
-        let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
-        log::info!("expected header_rlp_max_bytes, {}", header_rlp_max_bytes);
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞");
-
         let keygen_circuit = header_intent.build_keygen_circuit();
         let (header_pk, header_pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
@@ -267,19 +261,36 @@ const_hex::encode(&mmr_peak),
 const_hex::encode(&mmr_root)
 );
         mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
-        let mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
-        log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
+        let arr_mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
+        log::info!("arr_mmr_proof with len {} {:?}", &arr_mmr_proof.len(), &arr_mmr_proof);
         let input_subquery = CircuitInputHeaderSubquery {
             header_rlp,
-            mmr_proof,
+            mmr_proof: arr_mmr_proof,
             // mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1],
             field_idx: STATE_ROOT_INDEX as u32,
         };
-        
-        let mut mmr_peaks = vec![mmr_peak];
+
+        //WIP prepend a magic number of zeros like the header test does
+        let mut mmr_peaks = vec![
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            H256::zero(),
+            mmr_peak,
+        ];
         mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
         let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-        log::info!("mmr_peaks {:?}", mmr_peaks.clone().into_iter().map(|p| const_hex::encode(p)).collect::<Vec<String>>());
+        log::info!("mmr_peaks {:?}", &mmr_peaks);
+
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
@@ -287,15 +298,7 @@ const_hex::encode(&mmr_root)
             _phantom: PhantomData,
         });
         header_circuit.feed_input(shard_input).unwrap();
-        // let promise_header = OutputHeaderShard {
-        //     results: vec![AnySubqueryResult {
-        //         subquery: HeaderSubquery {
-        //             block_number,
-        //             field_idx: STATE_ROOT_INDEX as u32,
-        //         },
-        //         value: state_root,
-        //     }],
-        // };
+
         let promises = [
             (
                 ComponentTypeKeccak::<Fr>::get_type_id(),
@@ -305,12 +308,6 @@ const_hex::encode(&mmr_root)
                         .into_logical_results(),
                 ),
             ),
-            // (
-            //     ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
-            //     shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(
-            //         promise_header.into(),
-            //     ),
-            // ),
         ]
         .into_iter()
         .collect();
