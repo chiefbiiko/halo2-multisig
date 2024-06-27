@@ -2,72 +2,39 @@ use std::{
     collections::HashMap, fs::File, io::{Read, Write}, marker::PhantomData
 };
 
-use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
-     utils::{append, mmr_1, prepare, resize_with_first, test_fixture, Halo2MultisigInput}};
-use axiom_eth::{
-    block_header::get_block_header_rlp_max_lens_from_extra, halo2_base::{
-        gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::{halo2curves::bn256::{Bn256, Fr}, plonk, poly::kzg::commitment::ParamsKZG}, utils::fs::gen_srs
-    }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak}, providers::block, rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt}, storage::circuit::EthStorageInput, utils::{build_utils::pinning::{
-            aggregation::AggregationCircuitPinning, CircuitPinningInstructions, Halo2CircuitPinning, PinnableCircuit, RlcCircuitPinning
-        }, component::{promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType, SelectedDataShardsInMerkle}, merkle_aggregation::InputMerkleAggregation, snark_verifier::{get_accumulator_indices, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR}}
-};
-
-use axiom_codec::{constants::{
-        NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, USER_MAX_OUTPUTS, USER_MAX_SUBQUERIES, USER_RESULT_FIELD_ELEMENTS
-    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryResult, SubqueryType}}};
-use axiom_query::{components::{results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot, SubqueryDependencies}, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, CircuitInputAccountSubquery, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::{CircuitInputHeaderShard, CircuitInputHeaderSubquery, ComponentTypeHeaderSubquery, OutputHeaderShard}}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
-use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
-use axiom_eth::halo2_base::utils::halo2::KeygenCircuitIntent;
-use axiom_eth::utils::component::ComponentCircuit;
-use ethers_core::types::{BigEndianHash, H256, U256, Bytes};
+use ethers_core::types::{ H256, U256};
 use itertools::Itertools;
-use std::str::FromStr;
-use axiom_eth::utils::component::promise_loader::multi::ComponentTypeList;
+
+     use axiom_codec::{constants::{
+        NUM_SUBQUERY_TYPES, USER_ADVICE_COLS, USER_FIXED_COLS, USER_INSTANCE_COLS, USER_LOOKUP_ADVICE_COLS, 
+    }, types::{field_elements::AnySubqueryResult, native::{AccountSubquery, HeaderSubquery, StorageSubquery, SubqueryResult, SubqueryType}}};
+use axiom_eth::{
+    halo2_base::utils::halo2::KeygenCircuitIntent,
+    block_header::get_block_header_rlp_max_lens_from_extra, halo2_base::{
+        gates::circuit::BaseCircuitParams,
+         halo2_proofs::halo2curves::bn256::Fr,
+          utils::fs::gen_srs,
+    }, halo2_proofs::dev::MockProver, keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak},
+      rlc::circuit::RlcCircuitParams, snark_verifier_sdk::{halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk}, CircuitExt},
+        utils::{build_utils::pinning::{
+            aggregation::AggregationCircuitPinning,
+              Halo2CircuitPinning, PinnableCircuit, 
+        }, component::{ComponentCircuit, promise_loader::{comp_loader::SingleComponentLoaderParams, multi::MultiPromiseLoaderParams, single::PromiseLoaderParams}, ComponentPromiseResultsInMerkle, ComponentType, 
+    }, 
+     snark_verifier::EnhancedSnark}
+};
+use axiom_query::{components::{
+    subqueries::storage::circuit::CoreParamsStorageSubquery,
+    results::{circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot,
+
+    }, table::SubqueryResultsTable, types::{CircuitInputResultsRootShard, LogicOutputResultsRoot}}, subqueries::{account::{circuit::{ComponentCircuitAccountSubquery, CoreParamsAccountSubquery}, types::{CircuitInputAccountShard, CircuitInputAccountSubquery, ComponentTypeAccountSubquery, OutputAccountShard}}, block_header::{circuit::{ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery}, types::{CircuitInputHeaderShard, CircuitInputHeaderSubquery, ComponentTypeHeaderSubquery, OutputHeaderShard}}, common::shard_into_component_promise_results, storage::types::{CircuitInputStorageShard, CircuitInputStorageSubquery, ComponentTypeStorageSubquery}}}, keygen::shard::{ShardIntentAccount, ShardIntentHeader, ShardIntentResultsRoot, ShardIntentStorage}};
+
+    use halo2_multisig::{circuit::ComponentCircuitStorageSubquery, constants::*, subquery_aggregation::InputSubqueryAggregation,
+        utils::{append, mmr_1, prepare, resize_with_first, test_fixture, Halo2MultisigInput}};
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
-
-    // let leaf = const_hex::decode_to_array::<&str, 32>("0x771613cbfcfea7fb8685dcfda02e8048408938769da3fb1d79ed5052cb97a885").expect("leaf");
-    // let (root, proof) = mmr_1(leaf.into());
-    // log::info!("{},,, {:?}", const_hex::encode(&root), proof.into_iter().map(|p| const_hex::encode(p)));
-    // return;
-
-    let subq_aggr_params =         AggregationConfigParams {
-        degree: K as u32,
-        lookup_bits:LOOKUP_BITS,
-        num_advice: USER_ADVICE_COLS,
-        num_lookup_advice: USER_LOOKUP_ADVICE_COLS,
-        num_fixed: USER_FIXED_COLS,
-    };
-    //  get_dummy_aggregation_params(K);
-    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
-    let subq_aggr_break_points = vec![
-        vec![
-          1048565,
-          1048566,
-          1048566,
-          1048566,
-          1048564,
-          1048565,
-          1048566,
-          1048565,
-          1048566,
-          1048565,
-          1048564,
-          1048566,
-          1048564,
-          1048566,
-          1048565,
-          1048564,
-          1048566,
-          1048566
-        ]
-      ];
-    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
-    // kzg params for subq aggr circuit
-    let kzg_params = gen_srs(K.try_into().unwrap());
-
 
     let base_params =         BaseCircuitParams {
         k: K,
@@ -78,34 +45,6 @@ async fn main() {
         num_instance_columns: USER_INSTANCE_COLS,
     };
     let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
-    
-    //OOOOORRRRR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/src/utils/eth_circuit.rs#L140
-    // EthCircuitImpl::new(
-    //     logic_inputs: I,
-    //     prompt_rlc_params: RlcCircuitParams,
-    //     promise_params: PromiseLoaderParams,
-    // )
-    
-    //WIP
-    // let rlc_thread_break_points = RlcThreadBreakPoints {}; //TODO
-    // let rlc_circuit_pinning = RlcCircuitPinning::new(rlc_params, rlc_thread_break_points);
-
-    //TODO let snark_storage, snark_account = generate_snark();
-
-    //CircuitBuilderStage::Keygen or Prove
-
-    // let enhanced_snark = EnhancedSnark::new( , None);
-    // let input_merkle_aggr = InputMerkleAggregation::new(vec![enhanced_snark]);
-    // let aggr_circuit = input_merkle_aggr.prover_circuit(pinning, kzg_params);
-
-    //SUBQUERY AGGREVGATION TESTS
-    //   https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L306
-
-    // let snark = gen_snark_shplonk(&params, &pk, prover_circuit, Some(snark_path));
-    // let k = 20u32;
-    // let params = gen_srs(k);
-
-
 
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
@@ -119,8 +58,6 @@ async fn main() {
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
     // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-
-    //WIP https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs#L239
 
     let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
     let storage_pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
@@ -142,26 +79,18 @@ async fn main() {
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
 
-    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
-    let aggr_circuit_params = AggregationConfigParams {
-        degree: K as u32,
-        lookup_bits: LOOKUP_BITS,
-        num_advice: NUM_ADVICE,
-        num_lookup_advice: NUM_LOOKUP_ADVICE,
-        num_fixed: NUM_FIXED,
-    };
-//strg_subq_input, state_root, storage_root,storage_key, addr, block_number, header_rlp
 let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash,mut header_rlp} = test_fixture().await.expect("fixture");
 let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
 header_rlp.resize(header_rlp_max_bytes, 0_u8);
 
-let strg_subq_input = CircuitInputStorageSubquery {
-    block_number: block_number as u64,
-    proof: eth_storage_input.clone()
-};
-
     let (storage_pk, storage_pinning, mut storage_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling storage shard");
+
+        let strg_subq_input = CircuitInputStorageSubquery {
+            block_number: block_number as u64,
+            proof: eth_storage_input.clone()
+        };
+
         let core_params = CoreParamsStorageSubquery {
             capacity: STORAGE_CAPACITY,
             max_trie_depth: STORAGE_PROOF_MAX_DEPTH,
@@ -536,6 +465,38 @@ const_hex::encode(&mmr_root)
     let snark_results = gen_snark_shplonk(&kzg_params, &results_pk, results_circuit, Some(&results_circuit_path));
 
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ creating subquery aggregation cricuit");
+    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L2
+    let subq_aggr_params =         AggregationConfigParams {
+        degree: K as u32,
+        lookup_bits:LOOKUP_BITS,
+        num_advice: NUM_ADVICE,//USER_ADVICE_COLS,
+        num_lookup_advice: NUM_LOOKUP_ADVICE,//USER_LOOKUP_ADVICE_COLS,
+        num_fixed: NUM_FIXED,//USER_FIXED_COLS,
+    };
+    //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L9
+    let subq_aggr_break_points = vec![
+        vec![
+          1048565,
+          1048566,
+          1048566,
+          1048566,
+          1048564,
+          1048565,
+          1048566,
+          1048565,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048564,
+          1048566,
+          1048565,
+          1048564,
+          1048566,
+          1048566
+        ]
+      ];
+    let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
     let mut subq_aggr_circuit = InputSubqueryAggregation {
         snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // account needs header
         snark_results_root: EnhancedSnark{inner: snark_results, agg_vk_hash_idx:None}, // everything needs results root
