@@ -224,7 +224,7 @@ header_rlp.resize(header_rlp_max_bytes, 0_u8);
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery {
-            capacity: 132, //HEADER_CAPACITY,
+            capacity: HEADER_CAPACITY,// 132, //HEADER_CAPACITY,
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
         };
         let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
