@@ -163,7 +163,7 @@ header_rlp.resize(header_rlp_max_bytes, 0_u8);
         };
         let loader_params = (
             PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
-            PromiseLoaderParams::new_for_one_shard(132), //HEADER_CAPACITY),
+            PromiseLoaderParams::new_for_one_shard(HEADER_CAPACITY), //132), //HEADER_CAPACITY),
         );
         let account_intent = ShardIntentAccount {
             core_params: core_params.clone(),
