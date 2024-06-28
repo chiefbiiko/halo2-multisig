@@ -3,7 +3,10 @@ pub const ACCOUNT_PROOF_MAX_DEPTH: usize = 14;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/production/all_max.yml#L116
 pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 /// The circuit will have 2^k rows.
-pub const K: usize = 26;
+/// Our header shard gate chip has 63_710_878 advice cells in phase 0
+/// With 19 advice columns that's 3_315_789.4736842103 rows 
+/// 2**21=2_097_152; 2**22=4_194_304
+pub const K: usize = 22;
 /// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
 pub const LOOKUP_BITS: usize = K - 1;
 /// Constraints are ignored if set to true.
