@@ -36,29 +36,6 @@ use axiom_query::{components::{
 async fn main() {
     env_logger::init();
 
-    let base_params =         BaseCircuitParams {
-        k: K,
-        num_advice_per_phase: vec![USER_ADVICE_COLS],
-        num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
-        num_fixed: USER_FIXED_COLS,
-        lookup_bits: Some(LOOKUP_BITS),
-        num_instance_columns: USER_INSTANCE_COLS,
-    };
-    let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
-
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // WIP => th/axiom-query/src/subquery_aggregation.rs ::prover_circuit()
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-    // †††††††††††✟✟✟✟✟✟✟✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✝✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
-
     let cargo_manifest_dir = env!("CARGO_MANIFEST_DIR");
     let storage_pinning_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit_pinning.json");
     let storage_pk_path = format!("{cargo_manifest_dir}/artifacts/storage_circuit.pk");
@@ -78,6 +55,15 @@ async fn main() {
     let results_circuit_path = format!("{cargo_manifest_dir}/artifacts/results_circuit.shplonk");
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
+    let base_params =         BaseCircuitParams {
+        k: K,
+        num_advice_per_phase: vec![USER_ADVICE_COLS],
+        num_lookup_advice_per_phase: vec![USER_LOOKUP_ADVICE_COLS],
+        num_fixed: USER_FIXED_COLS,
+        lookup_bits: Some(LOOKUP_BITS),
+        num_instance_columns: USER_INSTANCE_COLS,
+    };
+    let rlc_params = RlcCircuitParams { base: base_params, num_rlc_columns: NUM_RLC_COLUMNS };
 
 let Halo2MultisigInput { eth_storage_input, state_root, storage_root,storage_key, address:addr, block_number,  block_hash,mut header_rlp} = test_fixture().await.expect("fixture");
 let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);//TODO use constant from upstream
@@ -111,16 +97,16 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         let (pk, pinning) = keygen_circuit.create_pk(&kzg_params, &storage_pk_path, &storage_pinning_path).expect("strg pk and pinning");
         let mut vk_file = File::create(&storage_vk_path).expect("strg vk bin file");
         pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("strg vk bin write");
-        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+
         let mut storage_circuit = ComponentCircuitStorageSubquery::<Fr>::prover(
             core_params,
             loader_params,
             pinning.clone(),
         );
-        // TODO feed input to storage shard - only to storage shard bc it is our entry!?
-        // storage_circuit.feed_input(Box::new(input)).unwrap(); whyhow, still probly feed input here??????
 
-        //====
+        let shard_input = Box::new(CircuitInputStorageShard::<Fr> { requests: vec![strg_subq_input.clone()], _phantom: PhantomData });
+        storage_circuit.feed_input(shard_input).unwrap();
+
         let promise_account = OutputAccountShard {
             results: vec![AnySubqueryResult {
                 subquery: AccountSubquery {
@@ -131,9 +117,6 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
                 value: storage_root,
             }],
         };
-        //====
-        let shard_input = Box::new(CircuitInputStorageShard::<Fr> { requests: vec![strg_subq_input.clone()], _phantom: PhantomData });
-        storage_circuit.feed_input(shard_input).unwrap();
         let promises = [
             (
                 ComponentTypeKeccak::<Fr>::get_type_id(),
@@ -153,7 +136,7 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         .into_iter()
         .collect();
         storage_circuit.fulfill_promise_results(&promises).unwrap();
-        // storage_circuit.calculate_params();
+
         (pk, pinning, storage_circuit)
     };
    
@@ -177,14 +160,13 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         let (account_pk, account_pinning) = keygen_circuit.create_pk(&kzg_params, &account_pk_path, &account_pinning_path).expect("acnt pk and pinning");
         let mut vk_file = File::create(&account_vk_path).expect("acnt vk bin file");
         account_pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("acnt vk bin write");
-        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+
         let account_circuit = ComponentCircuitAccountSubquery::<Fr>::prover(
             core_params,
             loader_params,
             account_pinning.clone(),
         );
-        //IGNORE for now - think we dont need to feed input to the account component <== OLD
-        // account_circuit.feed_input(Box::new(input)).unwrap(); why feed input here??????
+
         let acct_subq_input = CircuitInputAccountSubquery {
             block_number: block_number as u64,
             field_idx: STATE_ROOT_INDEX as u32,
@@ -192,6 +174,7 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         };
         let shard_input = Box::new(CircuitInputAccountShard::<Fr> { requests: vec![acct_subq_input], _phantom: PhantomData });
         account_circuit.feed_input(shard_input).unwrap();
+
         let promise_header = OutputHeaderShard {
             results: vec![AnySubqueryResult {
                 subquery: HeaderSubquery {
@@ -220,6 +203,7 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         .into_iter()
         .collect();
         account_circuit.fulfill_promise_results(&promises).unwrap();
+
         (account_pk, account_pinning, account_circuit)
     };
 
@@ -231,7 +215,7 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         };
         // let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
         let loader_params = PromiseLoaderParams {
-            comp_loader_params: SingleComponentLoaderParams::new(4, vec![5000]),//KECCAK_F_CAPACITY]),
+            comp_loader_params: SingleComponentLoaderParams::new(4, vec![5000]),//MAGIC KECCAK_F_CAPACITY]),
         };
         let header_intent = ShardIntentHeader {
             core_params: core_params.clone(),
@@ -244,44 +228,44 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
         let (header_pk, header_pinning) = keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&header_vk_path).expect("hdr vk bin file");
         header_pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("hdr vk bin write");
-        //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L138
+
         let header_circuit = ComponentCircuitHeaderSubquery::<Fr>::prover(
             core_params,
             loader_params,
             header_pinning.clone(),
         );
 
-        //NOTE preparing header shard input incl block hash mmr proof
-        // mmr of single block hash
+        // mmr oracle
         let (mmr_root, mmr_peak, mut mmr_proof) = mmr_1(&block_hash);
         log::info!("mmr_leaf: {} \
 mmr_proof: {:?} \
 mmr_peak: {} \
 mmr_root: {}", 
 const_hex::encode(&block_hash),
-mmr_proof.clone().into_iter().map(|n| const_hex::encode(n)).collect::<Vec<String>>(),
+&mmr_proof,
 const_hex::encode(&mmr_peak),
 const_hex::encode(&mmr_root)
 );
+
         mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
         let arr_mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
         log::info!("arr_mmr_proof with len {} {:?}", &arr_mmr_proof.len(), &arr_mmr_proof);
+
         let input_subquery = CircuitInputHeaderSubquery {
             header_rlp,
             mmr_proof: arr_mmr_proof,
-            // mmr_proof: [H256::zero(); MMR_MAX_NUM_PEAKS - 1],
             field_idx: STATE_ROOT_INDEX as u32,
         };
 
         let mut mmr_peaks = vec![ mmr_peak ];
         mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
-        let mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-        log::info!("mmr_peaks {:?}", &mmr_peaks);
+        let arr_mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
+        log::info!("arr_mmr_peaks {:?}", &arr_mmr_peaks);
 
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
-            mmr: mmr_peaks,
+            mmr: arr_mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
-            requests: vec![input_subquery; HEADER_CAPACITY], //MAGIC HEADER_CAPACITY],
+            requests: vec![input_subquery; HEADER_CAPACITY],
             _phantom: PhantomData,
         });
         header_circuit.feed_input(shard_input).unwrap();
@@ -290,7 +274,7 @@ const_hex::encode(&mmr_root)
             (
                 ComponentTypeKeccak::<Fr>::get_type_id(),
                 ComponentPromiseResultsInMerkle::from_single_shard(
-                    generate_keccak_shards_from_calls(&header_circuit, 5000)//KECCAK_F_CAPACITY)
+                    generate_keccak_shards_from_calls(&header_circuit, 5000)//MAGIC KECCAK_F_CAPACITY)
                         .unwrap()
                         .into_logical_results(),
                 ),
@@ -314,7 +298,7 @@ const_hex::encode(&mmr_root)
         let mut params_per_comp = HashMap::new();
         params_per_comp.insert(
             ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
-            SingleComponentLoaderParams::new(0, vec![3]),
+            SingleComponentLoaderParams::new(4, vec![5000]),
         );
         params_per_comp.insert(
             ComponentTypeAccountSubquery::<Fr>::get_type_id(),
@@ -326,9 +310,6 @@ const_hex::encode(&mmr_root)
         );
         let promise_results_params = MultiPromiseLoaderParams { params_per_component: params_per_comp };
     
-        //QUESTION :: do we need to feed input to results root shard? => see below
-        
-
         //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ WIP CircuitInputResultsRootShard
         let mut header_subqueries = vec![
             (
@@ -402,8 +383,7 @@ const_hex::encode(&mmr_root)
         let logical_results = LogicOutputResultsRoot { results, subquery_hashes, num_subqueries };
         //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
         
-        //
-        let single_promise_loader = PromiseLoaderParams::new_for_one_shard(200);
+        let single_promise_loader = PromiseLoaderParams::new_for_one_shard(200); //MAGIC
         let results_intent = ShardIntentResultsRoot {
             core_params: CoreParamsResultRoot {
                 capacity: RESULTS_CAPACITY,
@@ -415,7 +395,7 @@ const_hex::encode(&mmr_root)
         };
         let keygen_circuit = results_intent.build_keygen_circuit();
         let (results_pk, results_pinning) = keygen_circuit.create_pk(&kzg_params, &results_pk_path, &results_pinning_path).expect("res pk and pinning");
-        let mut vk_file = File::create(&results_vk_path).expect("re vk bin file");
+        let mut vk_file = File::create(&results_vk_path).expect("res vk bin file");
         results_pk.get_vk().write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes).expect("res vk bin write");
 
         let mut results_circuit = ComponentCircuitResultsRoot::<Fr>::new(
@@ -424,16 +404,14 @@ const_hex::encode(&mmr_root)
             rlc_params,
         );
 
-        // passing input to results root sharrd circuit
         results_circuit.feed_input(results_input).expect("feed results");
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
-        // results_circuit.calculate_params();
-    
+
         (results_pk, results_pinning, results_circuit)
     };
 
-    // get keccak calls originating from storage shard that got input //~? ??
-    let output_keccak_shard = generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
+    // What is `InputSubqueryAggregation.promise_commit_keccak` supposed to be?
+    let output_keccak_shard = generate_keccak_shards_from_calls(&results_circuit, KECCAK_F_CAPACITY).expect("keccak calls");
     let keccak_merkle = ComponentPromiseResultsInMerkle::<Fr>::from_single_shard(
         output_keccak_shard.into_logical_results(),
     );
@@ -482,7 +460,7 @@ const_hex::encode(&mmr_root)
       ];
     let subq_aggr_pinning = AggregationCircuitPinning::new(subq_aggr_params, subq_aggr_break_points);
     let mut subq_aggr_circuit = InputSubqueryAggregation {
-        snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // account needs header
+        snark_header: EnhancedSnark{inner: snark_header, agg_vk_hash_idx:None},        // header needs results
         snark_results_root: EnhancedSnark{inner: snark_results, agg_vk_hash_idx:None}, // everything needs results root
         snark_account: Some(EnhancedSnark{inner: snark_account, agg_vk_hash_idx:None}), // account needs header
         snark_storage: Some(EnhancedSnark{inner: snark_storage, agg_vk_hash_idx:None}), // storage needs account         
@@ -494,34 +472,19 @@ const_hex::encode(&mmr_root)
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
 
-    //TODO do sth with aggr circuit
-    subq_aggr_circuit.calculate_params(Some(9));
+    // subq_aggr_circuit.calculate_params(Some(9));
     let instances = subq_aggr_circuit.instances();
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ running mock prover");
     MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
-    // subq_aggr_circuit
+    //TODO add 1more aggregation ontop
 
-    
-    
-    //???????? SOME QUESTIONS
-    // - how to aggregate from component storage circuit to evm verifier circuit?
-    //   ..in our scenario where we want to generate a single storage proof proof:
-    //     - pass `CircuitInputStorageSubquery` to `storage_circuit.feed_input(Box::new(input))` above?
-    //     - after `feed_input()` do we need to call `circuit.fulfill_promise_results(&promise_results)`?
-    //     - if yes, how do we get these ---------------------------------------------/\/\/\/\/\/\/\/\  ?
-    //   
-    // - does 1 level of aggregation suffice to get an EVM verifier?
-    //     -> no we need at least one more level of aggregation to verify keccak promise commitments
-    //     -> see https://github.com/axiom-crypto/axiom-eth/tree/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query#subquery-aggregation-circuit
-    // - 
-
-    //WIPEND
 }
 
 //=====NOTES=====
-
-//AXIOM PROD SUBQ AGGR https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/circuit.rs
-//RELATED              https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/tests.rs#L150
+// - currently stuck at `let snark_header = gen_snark_shplonk(...)` failing with "SNARK proof failed to verify"
+// - does 1 level of aggregation suffice to get an EVM verifier?
+//     -> no we need at least one more level of aggregation to verify keccak promise commitments
+//     -> see https://github.com/axiom-crypto/axiom-eth/tree/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query#subquery-aggregation-circuit
 //... gen_evm_proof_shplonk()
 //... gen_evm_calldata_shplonk()
 //... gen_evm_verifier_shplonk::<AggregationCircuit>(
