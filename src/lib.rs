@@ -1,4 +1,3 @@
-pub mod circuit;
 pub mod constants;
 pub mod subquery_aggregation;
 #[cfg(test)]

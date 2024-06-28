@@ -59,7 +59,7 @@ use axiom_query::{
             table::SubqueryResultsTable,
             types::{CircuitInputResultsRootShard, LogicOutputResultsRoot},
         },
-        subqueries::storage::circuit::CoreParamsStorageSubquery,
+        subqueries::storage::circuit::{CoreParamsStorageSubquery, ComponentCircuitStorageSubquery},
         subqueries::{
             account::{
                 circuit::{
@@ -93,7 +93,6 @@ use axiom_query::{
 };
 
 use halo2_multisig::{
-    circuit::ComponentCircuitStorageSubquery,
     constants::*,
     subquery_aggregation::InputSubqueryAggregation,
     utils::{
