@@ -11,28 +11,22 @@ use axiom_eth::{
     utils::{
         build_utils::pinning::aggregation::AggregationCircuitPinning,
         component::{
-            promise_loader::multi::ComponentTypeList,
-            types::ComponentPublicInstances, utils::create_hasher,
+            promise_loader::multi::ComponentTypeList, types::ComponentPublicInstances, utils::create_hasher,
             ComponentType,
         },
         hilo::HiLo,
         snark_verifier::{
-            create_universal_aggregation_circuit, AggregationCircuitParams,
-            EnhancedSnark, NUM_FE_ACCUMULATOR,
+            create_universal_aggregation_circuit, AggregationCircuitParams, EnhancedSnark, NUM_FE_ACCUMULATOR,
         },
     },
 };
 use itertools::{zip_eq, Itertools};
 
 use axiom_query::components::{
-    results::{
-        circuit::SubqueryDependencies, types::LogicalPublicInstanceResultsRoot,
-    },
+    results::{circuit::SubqueryDependencies, types::LogicalPublicInstanceResultsRoot},
     subqueries::{
         account::types::ComponentTypeAccountSubquery,
-        block_header::types::{
-            ComponentTypeHeaderSubquery, LogicalPublicInstanceHeader,
-        },
+        block_header::types::{ComponentTypeHeaderSubquery, LogicalPublicInstanceHeader},
         receipt::types::ComponentTypeReceiptSubquery,
         solidity_mappings::types::ComponentTypeSolidityNestedMappingSubquery,
         storage::types::ComponentTypeStorageSubquery,
@@ -95,9 +89,7 @@ impl<T> TryFrom<Vec<T>> for LogicalPublicInstanceSubqueryAgg<T> {
     type Error = anyhow::Error;
     fn try_from(value: Vec<T>) -> Result<Self, Self::Error> {
         let [promise_keccak, agg_vkey_hash, results_root_poseidon, commit_subquery_hashes, mmr_hi, mmr_lo] =
-            value.try_into().map_err(|_| {
-                anyhow!("LogicalPublicInstanceSubqueryAgg invalid length")
-            })?;
+            value.try_into().map_err(|_| anyhow!("LogicalPublicInstanceSubqueryAgg invalid length"))?;
         Ok(Self {
             promise_keccak,
             agg_vkey_hash,
@@ -119,10 +111,7 @@ impl<T: Copy> LogicalPublicInstanceSubqueryAgg<T> {
 }
 
 // This is not used:
-impl_flatten_conversion!(
-    LogicalPublicInstanceSubqueryAgg,
-    FIELD_SIZE_PUBLIC_INSTANCES
-);
+impl_flatten_conversion!(LogicalPublicInstanceSubqueryAgg, FIELD_SIZE_PUBLIC_INSTANCES);
 //////
 
 impl InputSubqueryAggregation {
@@ -140,8 +129,7 @@ impl InputSubqueryAggregation {
         if self.snark_storage.is_some() && self.snark_account.is_none() {
             bail!("Storage snark requires Account snark");
         }
-        if self.snark_solidity_mapping.is_some() && self.snark_storage.is_none()
-        {
+        if self.snark_solidity_mapping.is_some() && self.snark_storage.is_none() {
             bail!("SolidityMapping snark requires Storage snark");
         }
         const NUM_SNARKS: usize = 7;
@@ -166,28 +154,22 @@ impl InputSubqueryAggregation {
         if snarks.iter().flatten().any(|s| s.agg_vk_hash_idx.is_some()) {
             bail!("[SubqueryAggregation] No snark should be universal.");
         }
-        let snarks =
-            snarks.into_iter().flatten().map(|s| s.inner).collect_vec();
+        let snarks = snarks.into_iter().flatten().map(|s| s.inner).collect_vec();
         let agg_vkey_hash_indices = vec![None; snarks.len()];
-        let (mut circuit, previous_instances, agg_vkey_hash) =
-            create_universal_aggregation_circuit::<SHPLONK>(
-                stage,
-                circuit_params,
-                kzg_params,
-                snarks,
-                agg_vkey_hash_indices,
-            );
+        let (mut circuit, previous_instances, agg_vkey_hash) = create_universal_aggregation_circuit::<SHPLONK>(
+            stage,
+            circuit_params,
+            kzg_params,
+            snarks,
+            agg_vkey_hash_indices,
+        );
 
         let builder = &mut circuit.builder;
         let ctx = builder.main(0);
 
         // Parse aggregated component public instances
         let mut previous_instances = previous_instances.into_iter();
-        let mut get_next_pis = || {
-            ComponentPublicInstances::try_from(
-                previous_instances.next().unwrap(),
-            )
-        };
+        let mut get_next_pis = || ComponentPublicInstances::try_from(previous_instances.next().unwrap());
         let mut pis = Vec::with_capacity(NUM_SNARKS);
         for snark_enabled in snarks_enabled {
             if snark_enabled {
@@ -227,100 +209,61 @@ impl InputSubqueryAggregation {
             ComponentTypeStorageSubquery::<F>::get_type_id(),
         ] {
             if let Some(output_commit) = subquery_commits.get(&type_id) {
-                hashed_commits.insert(
-                    type_id,
-                    hasher.hash_fix_len_array(
-                        ctx,
-                        &gate,
-                        &[promise_keccak, *output_commit],
-                    ),
-                );
+                hashed_commits
+                    .insert(type_id, hasher.hash_fix_len_array(ctx, &gate, &[promise_keccak, *output_commit]));
             }
         }
 
         // ======== Manually check all promise calls between subqueries: =======
         // Header calls Keccak
         {
-            let hashed_commit_keccak =
-                hasher.hash_fix_len_array(ctx, &gate, &[promise_keccak]);
-            let header_promise_commit = subquery_promises
-                [&ComponentTypeHeaderSubquery::<F>::get_type_id()];
-            log::debug!(
-                "hash(promise_keccak): {:?}",
-                hashed_commit_keccak.value()
-            );
-            log::debug!(
-                "header_promise_commit: {:?}",
-                header_promise_commit.value()
-            );
+            let hashed_commit_keccak = hasher.hash_fix_len_array(ctx, &gate, &[promise_keccak]);
+            let header_promise_commit = subquery_promises[&ComponentTypeHeaderSubquery::<F>::get_type_id()];
+            log::debug!("hash(promise_keccak): {:?}", hashed_commit_keccak.value());
+            log::debug!("header_promise_commit: {:?}", header_promise_commit.value());
             ctx.constrain_equal(&hashed_commit_keccak, &header_promise_commit);
         }
         // Below when we say promise_header and commit_header, we actually mean promise_keccak_header and commit_keccak_header because both have been hashed with a promise_keccak.
         // Account calls Keccak & Header
-        if let Some(promise_header) = subquery_promises
-            .get(&ComponentTypeAccountSubquery::<F>::get_type_id())
-        {
-            let commit_header = hashed_commits
-                [&ComponentTypeHeaderSubquery::<F>::get_type_id()];
+        if let Some(promise_header) = subquery_promises.get(&ComponentTypeAccountSubquery::<F>::get_type_id()) {
+            let commit_header = hashed_commits[&ComponentTypeHeaderSubquery::<F>::get_type_id()];
             log::debug!("account:commit_header: {:?}", commit_header.value());
             log::debug!("account:promise_header: {:?}", promise_header.value());
             ctx.constrain_equal(&commit_header, promise_header);
         }
         // Storage calls Keccak & Account
-        if let Some(promise_account) = subquery_promises
-            .get(&ComponentTypeStorageSubquery::<F>::get_type_id())
-        {
-            let commit_account = hashed_commits
-                [&ComponentTypeAccountSubquery::<F>::get_type_id()];
+        if let Some(promise_account) = subquery_promises.get(&ComponentTypeStorageSubquery::<F>::get_type_id()) {
+            let commit_account = hashed_commits[&ComponentTypeAccountSubquery::<F>::get_type_id()];
             log::debug!("storage:commit_account: {:?}", commit_account.value());
-            log::debug!(
-                "storage:promise_account: {:?}",
-                promise_account.value()
-            );
+            log::debug!("storage:promise_account: {:?}", promise_account.value());
             ctx.constrain_equal(&commit_account, promise_account);
         }
         // Tx calls Keccak & Header
-        if let Some(promise_header) =
-            subquery_promises.get(&ComponentTypeTxSubquery::<F>::get_type_id())
-        {
-            let commit_header = hashed_commits
-                [&ComponentTypeHeaderSubquery::<F>::get_type_id()];
+        if let Some(promise_header) = subquery_promises.get(&ComponentTypeTxSubquery::<F>::get_type_id()) {
+            let commit_header = hashed_commits[&ComponentTypeHeaderSubquery::<F>::get_type_id()];
             log::debug!("tx:commit_header: {:?}", commit_header.value());
             log::debug!("tx:promise_header: {:?}", promise_header.value());
             ctx.constrain_equal(&commit_header, promise_header);
         }
         // Receipt calls Keccak & Header
-        if let Some(promise_header) = subquery_promises
-            .get(&ComponentTypeReceiptSubquery::<F>::get_type_id())
-        {
-            let commit_header = hashed_commits
-                [&ComponentTypeHeaderSubquery::<F>::get_type_id()];
+        if let Some(promise_header) = subquery_promises.get(&ComponentTypeReceiptSubquery::<F>::get_type_id()) {
+            let commit_header = hashed_commits[&ComponentTypeHeaderSubquery::<F>::get_type_id()];
             log::debug!("receipt:commit_header: {:?}", commit_header.value());
             log::debug!("receipt:promise_header: {:?}", promise_header.value());
             ctx.constrain_equal(&commit_header, promise_header);
         }
         // SolidityNestedMapping calls Keccak & Storage
         if let Some(promise_storage) =
-            subquery_promises.get(
-                &ComponentTypeSolidityNestedMappingSubquery::<F>::get_type_id(),
-            )
+            subquery_promises.get(&ComponentTypeSolidityNestedMappingSubquery::<F>::get_type_id())
         {
-            let commit_storage = hashed_commits
-                [&ComponentTypeStorageSubquery::<F>::get_type_id()];
-            log::debug!(
-                "solidity_nested_mapping:commit_storage: {:?}",
-                commit_storage.value()
-            );
-            log::debug!(
-                "solidity_nested_mapping:promise_storage: {:?}",
-                promise_storage.value()
-            );
+            let commit_storage = hashed_commits[&ComponentTypeStorageSubquery::<F>::get_type_id()];
+            log::debug!("solidity_nested_mapping:commit_storage: {:?}", commit_storage.value());
+            log::debug!("solidity_nested_mapping:promise_storage: {:?}", promise_storage.value());
             ctx.constrain_equal(&commit_storage, promise_storage);
         }
 
         // Get keccakPacked(blockhashMmr)
-        let LogicalPublicInstanceHeader { mmr_keccak } =
-            pis_header.other.try_into()?;
+        let LogicalPublicInstanceHeader { mmr_keccak } = pis_header.other.try_into()?;
 
         // ======== results root =========
         // MUST match order in `InputResultsRootShard::build`
@@ -334,28 +277,16 @@ impl InputSubqueryAggregation {
             }
         }
 
-        let results_promise_commit =
-            hasher.hash_fix_len_array(ctx, &gate, &results_deps_commits);
+        let results_promise_commit = hasher.hash_fix_len_array(ctx, &gate, &results_deps_commits);
 
-        log::debug!(
-            "results_promise_commit: {:?}",
-            results_promise_commit.value()
-        );
-        log::debug!(
-            "promise_result_commit: {:?}",
-            pis_results.promise_result_commit.value()
-        );
-        ctx.constrain_equal(
-            &results_promise_commit,
-            &pis_results.promise_result_commit,
-        );
+        log::debug!("results_promise_commit: {:?}", results_promise_commit.value());
+        log::debug!("promise_result_commit: {:?}", pis_results.promise_result_commit.value());
+        ctx.constrain_equal(&results_promise_commit, &pis_results.promise_result_commit);
 
         // We have implicitly checked all Components use the same `promise_keccak` above.
 
-        let LogicalPublicInstanceResultsRoot {
-            results_root_poseidon,
-            commit_subquery_hashes,
-        } = pis_results.other.try_into().unwrap();
+        let LogicalPublicInstanceResultsRoot { results_root_poseidon, commit_subquery_hashes } =
+            pis_results.other.try_into().unwrap();
 
         let logical_pis = LogicalPublicInstanceSubqueryAgg {
             promise_keccak,
@@ -378,8 +309,6 @@ impl InputSubqueryAggregation {
         pinning: AggregationCircuitPinning,
         kzg_params: &ParamsKZG<Bn256>,
     ) -> Result<AggregationCircuit> {
-        Ok(self
-            .build(CircuitBuilderStage::Prover, pinning.params, kzg_params)?
-            .use_break_points(pinning.break_points))
+        Ok(self.build(CircuitBuilderStage::Prover, pinning.params, kzg_params)?.use_break_points(pinning.break_points))
     }
 }

@@ -12,10 +12,8 @@ pub const LOOKUP_BITS: usize = K - 1;
 /// Constraints are ignored if set to true.
 pub const WITNESS_GEN_ONLY: bool = false;
 /// Storage slot of Safe's signedMessages mapping
-pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 7,
-];
+pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] =
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7];
 /// Index of the storage root in an account node.
 pub const STORAGE_ROOT_INDEX: usize = 2;
 /// Index of the state root in a block header.
@@ -29,14 +27,14 @@ pub const NUM_LOOKUP_ADVICE: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L6
 pub const NUM_FIXED: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/storage/tests.rs#L87C29-L87C33
-pub const KECCAK_F_CAPACITY: usize = 200;//1200;
-//NOTE we only do a single storage proof at a time
+pub const KECCAK_F_CAPACITY: usize = 200; //1200;
+                                          //NOTE we only do a single storage proof at a time
 pub const STORAGE_CAPACITY: usize = 1;
 //NOTE we only do a single storage proof at a time
 pub const ACCOUNT_CAPACITY: usize = 1;
 //hardended GUESS
 pub const HEADER_CAPACITY: usize = 1; //132;//33;//132;//1;//132;
-//GUESS
+                                      //GUESS
 pub const RESULTS_CAPACITY: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/types.rs#L76
 pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
@@ -44,12 +42,8 @@ pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
 pub const MAX_EXTRA_DATA_BYTES: usize = 32;
 // //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
 // pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
-pub const MMR_SIZE_1: [u8; 32] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 3,
-];
+pub const MMR_SIZE_1: [u8; 32] =
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3];
 // 32 zero bytes
-pub const ZERO_32: [u8; 32] = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-];
+pub const ZERO_32: [u8; 32] =
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
