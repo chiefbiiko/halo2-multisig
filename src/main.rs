@@ -226,13 +226,13 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery {
-            capacity: 3,//HEADER_CAPACITY
+            capacity: HEADER_CAPACITY,//4
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
         };
-        // let loader_params= PromiseLoaderParams::new_for_one_shard(200); //MAGIC KECCAK_F_CAPACITY)
-        let loader_params = PromiseLoaderParams {
-            comp_loader_params: SingleComponentLoaderParams::new(3, vec![KECCAK_F_CAPACITY]),
-        };
+        let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
+        // let loader_params = PromiseLoaderParams {
+        //     comp_loader_params: SingleComponentLoaderParams::new(4, vec![5000]),//KECCAK_F_CAPACITY]),
+        // };
         let header_intent = ShardIntentHeader {
             core_params: core_params.clone(),
             loader_params: loader_params.clone(),
