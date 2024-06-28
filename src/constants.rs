@@ -11,9 +11,6 @@ pub const K: usize = 21;
 pub const LOOKUP_BITS: usize = K - 1;
 /// Constraints are ignored if set to true.
 pub const WITNESS_GEN_ONLY: bool = false;
-/// This means we can concatenate arrays with individual max length 2^32.
-//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/lib.rs#L23
-pub const DEFAULT_RLC_CACHE_BITS: usize = 32;
 /// Storage slot of Safe's signedMessages mapping
 pub const SAFE_SIGNED_MESSAGES_SLOT: [u8; 32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -39,7 +36,7 @@ pub const STORAGE_CAPACITY: usize = 1;
 pub const ACCOUNT_CAPACITY: usize = 1;
 //hardended GUESS
 pub const HEADER_CAPACITY: usize = 1; //132;//33;//132;//1;//132;
-                                      //GUESS
+//GUESS
 pub const RESULTS_CAPACITY: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/subquery_aggregation/types.rs#L76
 pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
@@ -47,9 +44,6 @@ pub const SUBQUERY_AGGREGATION_AGG_VKEY_HASH_IDX: usize = 1;
 pub const MAX_EXTRA_DATA_BYTES: usize = 32;
 // //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/results/tests.rs#L280
 // pub const COMPONENT_CAPACITY_TOTAL: usize = 32;
-//FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/mod.rs#L46
-pub const MMR_MAX_NUM_PEAKS: usize = 32; // assuming block number stays in u32, < 2^32
-                                         // Merkle Mountain Range size for a tree range with one leaf
 pub const MMR_SIZE_1: [u8; 32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 3,

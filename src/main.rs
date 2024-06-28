@@ -53,6 +53,7 @@ use axiom_eth::{
     },
 };
 use axiom_query::{
+    DEFAULT_RLC_CACHE_BITS,
     components::{
         results::{
             circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot},
@@ -73,6 +74,7 @@ use axiom_query::{
                 },
             },
             block_header::{
+                MMR_MAX_NUM_PEAKS,
                 circuit::{
                     ComponentCircuitHeaderSubquery, CoreParamsHeaderSubquery,
                 },
