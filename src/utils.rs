@@ -1,20 +1,29 @@
-use axiom_codec::types::{field_elements::AnySubqueryResult, native::{Subquery, SubqueryResult}};
-use axiom_eth::{
-    halo2_base::AssignedValue, mpt::KECCAK_RLP_EMPTY_STRING, providers::{block::get_block_rlp, setup_provider}, utils::component::{
-        types::{FixLenLogical, Flatten},
-        utils::get_logical_value,
-         ComponentType, FlattenVirtualTable, LogicalResult,
-    }, Field,
-    providers::storage::json_to_mpt_input,
-    storage::circuit::EthStorageInput,
-};
-use axiom_query::components::subqueries::common::OutputSubqueryShard;
-use itertools::Itertools;
-use serde::{Serialize, Deserialize};
 use crate::constants::*;
 use anyhow::{Context as _, Result};
-use ethers_core::types::{Address, Block, EIP1186ProofResponse, H160,H256,Chain};
+use axiom_codec::types::{
+    field_elements::AnySubqueryResult,
+    native::{Subquery, SubqueryResult},
+};
+use axiom_eth::{
+    halo2_base::AssignedValue,
+    mpt::KECCAK_RLP_EMPTY_STRING,
+    providers::storage::json_to_mpt_input,
+    providers::{block::get_block_rlp, setup_provider},
+    storage::circuit::EthStorageInput,
+    utils::component::{
+        types::{FixLenLogical, Flatten},
+        utils::get_logical_value,
+        ComponentType, FlattenVirtualTable, LogicalResult,
+    },
+    Field,
+};
+use axiom_query::components::subqueries::common::OutputSubqueryShard;
+use ethers_core::types::{
+    Address, Block, Chain, EIP1186ProofResponse, H160, H256,
+};
 use ethers_providers::{Middleware, Provider};
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
 
 pub(crate) fn extract_virtual_table<
@@ -24,7 +33,9 @@ pub(crate) fn extract_virtual_table<
 >(
     outputs: impl Iterator<Item = AnySubqueryResult<S, T>>,
 ) -> FlattenVirtualTable<AssignedValue<F>> {
-    outputs.map(|output| (output.subquery.into(), output.value.into())).collect()
+    outputs
+        .map(|output| (output.subquery.into(), output.value.into()))
+        .collect()
 }
 
 pub(crate) fn extract_logical_results<
@@ -75,13 +86,13 @@ pub fn json_to_input(
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Halo2MultisigInput {
     pub eth_storage_input: EthStorageInput,
-    pub state_root: H256, 
-    pub storage_root: H256, 
+    pub state_root: H256,
+    pub storage_root: H256,
     pub storage_key: H256,
-     pub address: H160, 
-     pub block_number: u32,
-     pub block_hash: H256,
-    pub header_rlp: Vec<u8>
+    pub address: H160,
+    pub block_number: u32,
+    pub block_hash: H256,
+    pub header_rlp: Vec<u8>,
 }
 
 pub async fn fetch_input(
@@ -108,17 +119,17 @@ pub async fn fetch_input(
     let block_number: u32 = block.number.unwrap().try_into().unwrap();
     let block_hash = block.hash.expect("block hash");
     let state_root = block.state_root;
-    let header_rlp  = get_block_rlp(&block);
-    
+    let header_rlp = get_block_rlp(&block);
+
     Ok(Halo2MultisigInput {
         eth_storage_input: json_to_input(block, proof),
-        state_root, 
-        storage_root: storage_hash.into(), 
+        state_root,
+        storage_root: storage_hash.into(),
         storage_key: H256::from(storage_key),
-         address: safe_address, 
-         block_number,
-         block_hash,
-          header_rlp
+        address: safe_address,
+        block_number,
+        block_hash,
+        header_rlp,
     })
 }
 
@@ -147,7 +158,10 @@ pub fn append(
     subqueries: &[(impl Into<Subquery> + Clone, H256)],
 ) {
     for (s, v) in subqueries {
-        results.push(SubqueryResult { subquery: s.clone().into(), value: v.0.into() })
+        results.push(SubqueryResult {
+            subquery: s.clone().into(),
+            value: v.0.into(),
+        })
     }
 }
 pub fn resize_with_first<T: Clone>(v: &mut Vec<T>, cap: usize) {
@@ -157,8 +171,13 @@ pub fn resize_with_first<T: Clone>(v: &mut Vec<T>, cap: usize) {
         v.clear();
     }
 }
-pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256> {
-    let results = results.into_iter().map(|(s, v)| AnySubqueryResult::new(s, v)).collect_vec();
+pub fn prepare<A: Clone>(
+    results: Vec<(A, H256)>,
+) -> OutputSubqueryShard<A, H256> {
+    let results = results
+        .into_iter()
+        .map(|(s, v)| AnySubqueryResult::new(s, v))
+        .collect_vec();
     OutputSubqueryShard { results }
 }
 

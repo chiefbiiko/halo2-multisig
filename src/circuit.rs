@@ -1,38 +1,68 @@
 use axiom_eth::{
     halo2_base::{
         gates::{
-            circuit::builder::BaseCircuitBuilder, GateInstructions, RangeChip, flex_gate::threads::parallelize_core,
+            circuit::builder::BaseCircuitBuilder,
+            flex_gate::threads::parallelize_core, GateInstructions, RangeChip,
         },
         safe_types::{
             FixLenBytes, SafeAddress, SafeBytes32, SafeType, SafeTypeChip,
         },
         AssignedValue, Context,
-    }, halo2_proofs::plonk::ConstraintSystem, keccak::{types::ComponentTypeKeccak, KeccakChip}, mpt::{MPTChip, MPTProofWitness}, providers::storage::json_to_mpt_input, rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair}, rlp::{
+    },
+    halo2_proofs::plonk::ConstraintSystem,
+    keccak::{types::ComponentTypeKeccak, KeccakChip},
+    mpt::{MPTChip, MPTProofWitness},
+    providers::storage::json_to_mpt_input,
+    rlc::circuit::builder::{RlcCircuitBuilder, RlcContextPair},
+    rlp::{
         types::{RlpArrayWitness, RlpFieldWitness},
         RlpChip,
-    }, storage::{circuit::EthStorageInput, EthAccountTrace,EthStorageWitness, EthStorageChip, EthStorageTrace, ACCOUNT_STATE_FIELDS_MAX_BYTES}, utils::{
+    },
+    storage::{
+        circuit::EthStorageInput, EthAccountTrace, EthStorageChip,
+        EthStorageTrace, EthStorageWitness, ACCOUNT_STATE_FIELDS_MAX_BYTES,
+    },
+    utils::{
         build_utils::aggregation::CircuitMetadata,
-        circuit_utils::bytes::{pack_bytes_to_hilo, safe_bytes32_to_hi_lo, unsafe_mpt_root_to_hi_lo},
+        circuit_utils::bytes::{
+            pack_bytes_to_hilo, safe_bytes32_to_hi_lo, unsafe_mpt_root_to_hi_lo,
+        },
         component::{
-            circuit::{  CoreBuilderOutput,        ComponentBuilder, ComponentCircuitImpl, CoreBuilder, CoreBuilderOutputParams, CoreBuilderParams}, promise_collector::{PromiseCaller, PromiseCollector}, promise_loader::{combo::PromiseBuilderCombo, single::PromiseLoader}, types::LogicalEmpty, utils::create_hasher, ComponentType, LogicalResult
-
+            circuit::{
+                ComponentBuilder, ComponentCircuitImpl, CoreBuilder,
+                CoreBuilderOutput, CoreBuilderOutputParams, CoreBuilderParams,
+            },
+            promise_collector::{PromiseCaller, PromiseCollector},
+            promise_loader::{
+                combo::PromiseBuilderCombo, single::PromiseLoader,
+            },
+            types::LogicalEmpty,
+            utils::create_hasher,
+            ComponentType, LogicalResult,
         },
         constrain_vec_equal, encode_addr_to_field,
         hilo::HiLo,
         unsafe_bytes_to_assigned,
-    }, zkevm_hashes::util::eth_types::ToBigEndian, Field
+    },
+    zkevm_hashes::util::eth_types::ToBigEndian,
+    Field,
 };
 use axiom_query::{
     components::subqueries::{
-        account::{STORAGE_ROOT_INDEX,types::{
-        ComponentTypeAccountSubquery, FieldAccountSubqueryCall,
-        }},
-        storage::types::{CircuitInputStorageShard, ComponentTypeStorageSubquery, 
-            CircuitInputStorageSubquery
+        account::{
+            types::{ComponentTypeAccountSubquery, FieldAccountSubqueryCall},
+            STORAGE_ROOT_INDEX,
+        },
+        storage::types::{
+            CircuitInputStorageShard, CircuitInputStorageSubquery,
+            ComponentTypeStorageSubquery,
         },
         // common::{extract_logical_results, extract_virtual_table},
     },
-    utils::codec::{AssignedAccountSubquery, AssignedStorageSubquery, AssignedStorageSubqueryResult},
+    utils::codec::{
+        AssignedAccountSubquery, AssignedStorageSubquery,
+        AssignedStorageSubqueryResult,
+    },
 };
 use ethers_core::types::{Block, EIP1186ProofResponse, H256};
 // use getset::Getters;
@@ -56,12 +86,6 @@ use crate::utils::{extract_logical_results, extract_virtual_table};
 // };
 
 use axiom_query::components::subqueries::storage::circuit::CoreParamsStorageSubquery;
-
-
-
-
-
-
 
 pub struct CoreBuilderStorageSubquery<F: Field> {
     input: Option<CircuitInputStorageShard<F>>,
@@ -89,10 +113,16 @@ pub struct CoreBuilderStorageSubquery<F: Field> {
 type CKeccak<F> = ComponentTypeKeccak<F>;
 type CAccount<F> = ComponentTypeAccountSubquery<F>;
 /// Used for loading storage promise results.
-pub type PromiseLoaderStorageSubquery<F> =
-    PromiseBuilderCombo<F, PromiseLoader<F, CKeccak<F>>, PromiseLoader<F, CAccount<F>>>;
-pub type ComponentCircuitStorageSubquery<F> =
-    ComponentCircuitImpl<F, CoreBuilderStorageSubquery<F>, PromiseLoaderStorageSubquery<F>>;
+pub type PromiseLoaderStorageSubquery<F> = PromiseBuilderCombo<
+    F,
+    PromiseLoader<F, CKeccak<F>>,
+    PromiseLoader<F, CAccount<F>>,
+>;
+pub type ComponentCircuitStorageSubquery<F> = ComponentCircuitImpl<
+    F,
+    CoreBuilderStorageSubquery<F>,
+    PromiseLoaderStorageSubquery<F>,
+>;
 
 impl<F: Field> CircuitMetadata for CoreBuilderStorageSubquery<F> {
     const HAS_ACCUMULATOR: bool = false;
@@ -132,7 +162,8 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderStorageSubquery<F> {
                     "InvalidInput: each storage proof input must have exactly one storage proof"
                 );
             }
-            if r.proof.storage_pfs[0].2.max_depth != self.params.max_trie_depth {
+            if r.proof.storage_pfs[0].2.max_depth != self.params.max_trie_depth
+            {
                 anyhow::bail!("StorageSubquery: request MPT max depth {} does not match configured max depth {}", r.proof.storage_pfs[0].2.max_depth, self.params.max_trie_depth);
             }
         }
@@ -145,8 +176,10 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderStorageSubquery<F> {
         promise_caller: PromiseCaller<F>,
     ) -> CoreBuilderOutput<F, Self::CompType> {
         // preamble: to be removed
-        let keccak =
-            KeccakChip::new_with_promise_collector(builder.range_chip(), promise_caller.clone());
+        let keccak = KeccakChip::new_with_promise_collector(
+            builder.range_chip(),
+            promise_caller.clone(),
+        );
         let range_chip = keccak.range();
         let rlp = RlpChip::new(range_chip, None);
         let mut poseidon = create_hasher();
@@ -160,9 +193,10 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderStorageSubquery<F> {
         let chip = EthStorageChip::new(&mpt, None);
         let pool = &mut builder.base.pool(0);
         // actual logic
-        let payload = parallelize_core(pool, input.requests.clone(), |ctx, subquery| {
-            handle_single_storage_subquery_phase0(ctx, &chip, &subquery)
-        });
+        let payload =
+            parallelize_core(pool, input.requests.clone(), |ctx, subquery| {
+                handle_single_storage_subquery_phase0(ctx, &chip, &subquery)
+            });
 
         let vt = extract_virtual_table(payload.iter().map(|p| p.output));
         let lr: Vec<LogicalResult<F, Self::CompType>> =
@@ -170,23 +204,35 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderStorageSubquery<F> {
 
         let ctx = pool.main();
         // promise calls to header component:
-        let account_storage_hash_idx = ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
+        let account_storage_hash_idx =
+            ctx.load_constant(F::from(STORAGE_ROOT_INDEX as u64));
         for p in payload.iter() {
             let block_number = p.output.subquery.block_number;
             let addr = p.output.subquery.addr;
             let storage_root = p.storage_root;
-            let account_subquery =
-                AssignedAccountSubquery { block_number, addr, field_idx: account_storage_hash_idx };
+            let account_subquery = AssignedAccountSubquery {
+                block_number,
+                addr,
+                field_idx: account_storage_hash_idx,
+            };
             let promise_storage_root = promise_caller
                 .call::<FieldAccountSubqueryCall<F>, ComponentTypeAccountSubquery<F>>(
                     ctx,
                     FieldAccountSubqueryCall(account_subquery),
                 )
                 .unwrap();
-            constrain_vec_equal(ctx, &storage_root.hi_lo(), &promise_storage_root.hi_lo());
+            constrain_vec_equal(
+                ctx,
+                &storage_root.hi_lo(),
+                &promise_storage_root.hi_lo(),
+            );
         }
         self.payload = Some((keccak, payload));
-        CoreBuilderOutput { public_instances: vec![], virtual_table: vt, logical_results: lr }
+        CoreBuilderOutput {
+            public_instances: vec![],
+            virtual_table: vt,
+            logical_results: lr,
+        }
     }
 
     fn virtual_assign_phase1(&mut self, builder: &mut RlcCircuitBuilder<F>) {
@@ -200,7 +246,11 @@ impl<F: Field> CoreBuilder<F> for CoreBuilderStorageSubquery<F> {
 
         // actual logic
         builder.parallelize_phase1(payload, |(ctx_gate, ctx_rlc), payload| {
-            handle_single_storage_subquery_phase1((ctx_gate, ctx_rlc), &chip, payload)
+            handle_single_storage_subquery_phase1(
+                (ctx_gate, ctx_rlc),
+                &chip,
+                payload,
+            )
         });
     }
 }
@@ -237,19 +287,23 @@ pub fn handle_single_storage_subquery_phase0<F: Field>(
     // convert storageRoot from bytes to HiLo for later. `parse_storage_proof` will constrain these witnesses to be bytes
     let storage_root = unsafe_mpt_root_to_hi_lo(ctx, gate, &mpt_proof);
     // Check the storage MPT proof
-    let storage_witness = chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
+    let storage_witness =
+        chip.parse_storage_proof_phase0(ctx, slot_bytes, mpt_proof);
     // Left pad value to 32 bytes and convert to HiLo
     let value = {
         let w = storage_witness.value_witness();
         let inputs = w.field_cells.clone();
         let len = w.field_len;
-        let var_len_bytes = SafeTypeChip::unsafe_to_var_len_bytes_vec(inputs, len, 32);
+        let var_len_bytes =
+            SafeTypeChip::unsafe_to_var_len_bytes_vec(inputs, len, 32);
         let fixed_bytes = var_len_bytes.left_pad_to_fixed(ctx, gate);
         pack_bytes_to_hilo(ctx, gate, fixed_bytes.bytes())
     };
     // set slot value to uint256(0) when the slot does not exist in the storage trie
     let slot_is_empty = storage_witness.mpt_witness().slot_is_empty;
-    let value = HiLo::from_hi_lo(value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)));
+    let value = HiLo::from_hi_lo(
+        value.hi_lo().map(|x| gate.mul_not(ctx, slot_is_empty, x)),
+    );
 
     let block_number = ctx.load_witness(F::from(subquery.block_number));
 
@@ -270,37 +324,6 @@ pub fn handle_single_storage_subquery_phase1<F: Field>(
 ) {
     chip.parse_storage_proof_phase1(ctx, payload.storage_witness);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // //OLD
 // pub fn verify_eip1186<F: Field>(

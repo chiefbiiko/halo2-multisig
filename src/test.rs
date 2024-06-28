@@ -1,9 +1,13 @@
 use std::{marker::PhantomData, str::FromStr};
 
-use axiom_codec::types::{field_elements::AnySubqueryResult, native::AccountSubquery};
+use axiom_codec::types::{
+    field_elements::AnySubqueryResult, native::AccountSubquery,
+};
 use axiom_eth::{
     halo2_proofs::{dev::MockProver, halo2curves::bn256::Fr},
-    keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak},
+    keccak::{
+        promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak,
+    },
     mpt::KECCAK_RLP_EMPTY_STRING,
     providers::{setup_provider, storage::json_to_mpt_input},
     utils::component::{
@@ -40,7 +44,6 @@ use axiom_query::components::subqueries::storage::{
     types::CircuitInputStorageShard,
 };
 
-
 // pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 use crate::{constants::*, utils::get_latest_block_number};
 
@@ -53,23 +56,37 @@ async fn test_mock_storage_subqueries(
 
     let _provider = setup_provider(network);
     let provider = &_provider;
-    let (requests, storage_hashes): (Vec<CircuitInputStorageSubquery>, Vec<H256>) =
-        join_all(subqueries.into_iter().map(|(block_num, addr, slot)| async move {
+    let (requests, storage_hashes): (
+        Vec<CircuitInputStorageSubquery>,
+        Vec<H256>,
+    ) = join_all(subqueries.into_iter().map(
+        |(block_num, addr, slot)| async move {
             let addr = Address::from_str(addr).unwrap();
-            let proof = provider.get_proof(addr, vec![slot], Some(block_num.into())).await.unwrap();
+            let proof = provider
+                .get_proof(addr, vec![slot], Some(block_num.into()))
+                .await
+                .unwrap();
             let storage_hash = if proof.storage_hash.is_zero() {
                 // RPC provider may give zero storage hash for empty account, but the correct storage hash should be the null root = keccak256(0x80)
                 H256::from_slice(&KECCAK_RLP_EMPTY_STRING)
             } else {
                 proof.storage_hash
             };
-            assert_eq!(proof.storage_proof.len(), 1, "Storage proof should have length 1 exactly");
+            assert_eq!(
+                proof.storage_proof.len(),
+                1,
+                "Storage proof should have length 1 exactly"
+            );
             let proof = json_to_mpt_input(proof, 0, STORAGE_PROOF_MAX_DEPTH);
-            (CircuitInputStorageSubquery { block_number: block_num, proof }, storage_hash)
-        }))
-        .await
-        .into_iter()
-        .unzip();
+            (
+                CircuitInputStorageSubquery { block_number: block_num, proof },
+                storage_hash,
+            )
+        },
+    ))
+    .await
+    .into_iter()
+    .unzip();
 
     let promise_account = OutputAccountShard {
         results: requests
@@ -102,7 +119,8 @@ async fn test_mock_storage_subqueries(
         circuit_params,
     );
 
-    let input = CircuitInputStorageShard::<Fr> { requests, _phantom: PhantomData };
+    let input =
+        CircuitInputStorageShard::<Fr> { requests, _phantom: PhantomData };
     circuit.feed_input(Box::new(input)).unwrap();
     circuit.calculate_params();
     let promises = [
@@ -116,9 +134,10 @@ async fn test_mock_storage_subqueries(
         ),
         (
             ComponentTypeAccountSubquery::<Fr>::get_type_id(),
-            shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
-                promise_account.into(),
-            ),
+            shard_into_component_promise_results::<
+                Fr,
+                ComponentTypeAccountSubquery<Fr>,
+            >(promise_account.into()),
         ),
     ]
     .into_iter()
@@ -150,7 +169,9 @@ async fn test_mock_storage_subqueries_uni_v3() {
     let address = "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640"; // uniswap v3 eth-usdc 5bps pool
     let latest = get_latest_block_number(network).await;
     let subqueries = [0, 1, 2, 8]
-        .map(|x| (rng.gen_range(12376729..latest), address, H256::from_low_u64_be(x)))
+        .map(|x| {
+            (rng.gen_range(12376729..latest), address, H256::from_low_u64_be(x))
+        })
         .to_vec();
     test_mock_storage_subqueries(k, network, subqueries).await;
 }
@@ -168,8 +189,9 @@ async fn test_mock_storage_subqueries_mapping() {
         H256::from_slice(&keccak256(bytes))
     });
     let latest = get_latest_block_number(Chain::Mainnet).await;
-    let subqueries: Vec<_> =
-        slots.map(|slot| (rng.gen_range(3914495..latest), address, slot)).collect();
+    let subqueries: Vec<_> = slots
+        .map(|slot| (rng.gen_range(3914495..latest), address, slot))
+        .collect();
     test_mock_storage_subqueries(k, network, subqueries).await;
 }
 
@@ -184,7 +206,13 @@ async fn test_mock_storage_subqueries_empty() {
     // don't use random for re-producibility
     let latest = 18317207; // get_latest_block_number(Chain::Mainnet).await;
     let subqueries: Vec<_> = (0..64)
-        .map(|_| (rng.gen_range(1428757..latest), address, H256::random_using(&mut rng)))
+        .map(|_| {
+            (
+                rng.gen_range(1428757..latest),
+                address,
+                H256::random_using(&mut rng),
+            )
+        })
         .collect();
     test_mock_storage_subqueries(k, network, subqueries[19..20].to_vec()).await;
 }
@@ -194,9 +222,21 @@ async fn test_mock_storage_subqueries_empty_precompile() {
     let k = 18;
     let subqueries = vec![
         (17143006, "0x0000000000000000000000000000000000000000", H256::zero()),
-        (17143000, "0x0000000000000000000000000000000000000001", H256::from_low_u64_be(1)),
-        (16356350, "0x0000000000000000000000000000000000000002", H256::from_low_u64_be(2)),
-        (15411056, "0x0000000000000000000000000000000000000003", H256::from_low_u64_be(3)),
+        (
+            17143000,
+            "0x0000000000000000000000000000000000000001",
+            H256::from_low_u64_be(1),
+        ),
+        (
+            16356350,
+            "0x0000000000000000000000000000000000000002",
+            H256::from_low_u64_be(2),
+        ),
+        (
+            15411056,
+            "0x0000000000000000000000000000000000000003",
+            H256::from_low_u64_be(3),
+        ),
     ];
     test_mock_storage_subqueries(k, Chain::Mainnet, subqueries).await;
 }
@@ -204,12 +244,13 @@ async fn test_mock_storage_subqueries_empty_precompile() {
 #[tokio::test]
 async fn test_mock_storage_subqueries_empty_account() {
     let k = 18;
-    let subqueries =
-        vec![(4_000_000, "0xF57252Fc4ff36D8d10B0b83d8272020D2B8eDd55", H256::from_low_u64_be(295))];
+    let subqueries = vec![(
+        4_000_000,
+        "0xF57252Fc4ff36D8d10B0b83d8272020D2B8eDd55",
+        H256::from_low_u64_be(295),
+    )];
     test_mock_storage_subqueries(k, Chain::Sepolia, subqueries).await;
 }
-
-
 
 //   use halo2_base::{
 //     gates::RangeInstructions,
