@@ -98,7 +98,7 @@ use halo2_multisig::{
     constants::*,
     subquery_aggregation::InputSubqueryAggregation,
     utils::{
-        append, mmr_1, prepare, resize_with_first, test_fixture,
+        append, mmr_1, prepare, resize_with_first, test_input,
         Halo2MultisigInput,
     },
 };
@@ -164,7 +164,7 @@ async fn main() {
         block_number,
         block_hash,
         mut header_rlp,
-    } = test_fixture().await.expect("fixture");
+    } = test_input().await.expect("fixture");
     let (header_rlp_max_bytes, _) =
         get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES); //TODO use constant from upstream
     log::info!(
