@@ -226,7 +226,7 @@ log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize 
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery {
-            capacity: 4, //HEADER_CAPACITY
+            capacity: HEADER_CAPACITY,
             max_extra_data_bytes: MAX_EXTRA_DATA_BYTES,
         };
         // let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
