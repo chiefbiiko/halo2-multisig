@@ -116,7 +116,7 @@ async fn main() {
         block_hash,
         mut header_rlp,
     } = test_input().await.expect("fixture");
-    let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES); //TODO use constant from upstream
+    let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ before resize header_rlp len, {}", header_rlp.len());
     header_rlp.resize(header_rlp_max_bytes, 0_u8);
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ after resize header_rlp len, {}", header_rlp.len());
