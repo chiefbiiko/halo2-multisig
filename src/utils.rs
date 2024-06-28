@@ -5,17 +5,10 @@ use axiom_codec::types::{
     native::{Subquery, SubqueryResult},
 };
 use axiom_eth::{
-    halo2_base::AssignedValue,
     mpt::KECCAK_RLP_EMPTY_STRING,
     providers::storage::json_to_mpt_input,
     providers::{block::get_block_rlp, setup_provider},
     storage::circuit::EthStorageInput,
-    utils::component::{
-        types::{FixLenLogical, Flatten},
-        utils::get_logical_value,
-        ComponentType, FlattenVirtualTable, LogicalResult,
-    },
-    Field,
 };
 use axiom_query::components::subqueries::common::OutputSubqueryShard;
 use ethers_core::types::{
@@ -25,36 +18,6 @@ use ethers_providers::{Middleware, Provider};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tiny_keccak::{Hasher, Keccak};
-
-pub(crate) fn extract_virtual_table<
-    F: Field,
-    S: Into<Flatten<AssignedValue<F>>>,
-    T: Into<Flatten<AssignedValue<F>>>,
->(
-    outputs: impl Iterator<Item = AnySubqueryResult<S, T>>,
-) -> FlattenVirtualTable<AssignedValue<F>> {
-    outputs
-        .map(|output| (output.subquery.into(), output.value.into()))
-        .collect()
-}
-
-pub(crate) fn extract_logical_results<
-    F: Field,
-    S: FixLenLogical<AssignedValue<F>>,
-    FS: FixLenLogical<F>,
-    T: ComponentType<F, InputValue = FS, InputWitness = S, LogicalInput = FS>,
->(
-    outputs: impl Iterator<Item = AnySubqueryResult<S, T::OutputWitness>>,
-) -> Vec<LogicalResult<F, T>> {
-    outputs
-        .map(|output| {
-            LogicalResult::<F, T>::new(
-                get_logical_value(&output.subquery),
-                get_logical_value(&output.value),
-            )
-        })
-        .collect()
-}
 
 pub fn concat_bytes64(a: [u8; 32], b: [u8; 32]) -> [u8; 64] {
     // https://stackoverflow.com/a/76573243

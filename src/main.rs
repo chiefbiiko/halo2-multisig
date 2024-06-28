@@ -59,7 +59,9 @@ use axiom_query::{
             table::SubqueryResultsTable,
             types::{CircuitInputResultsRootShard, LogicOutputResultsRoot},
         },
-        subqueries::storage::circuit::{CoreParamsStorageSubquery, ComponentCircuitStorageSubquery},
+        subqueries::storage::circuit::{
+            ComponentCircuitStorageSubquery, CoreParamsStorageSubquery,
+        },
         subqueries::{
             account::{
                 circuit::{
