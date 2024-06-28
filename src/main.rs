@@ -53,7 +53,6 @@ use axiom_eth::{
     },
 };
 use axiom_query::{
-    DEFAULT_RLC_CACHE_BITS,
     components::{
         results::{
             circuit::{ComponentCircuitResultsRoot, CoreParamsResultRoot},
@@ -348,7 +347,7 @@ async fn main() {
         };
         // let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
         let loader_params = PromiseLoaderParams {
-            comp_loader_params: SingleComponentLoaderParams::new(4, vec![5000]), //MAGIC KECCAK_F_CAPACITY]),
+            comp_loader_params: SingleComponentLoaderParams::new(4, vec![KECCAK_F_CAPACITY]),
         };
         let header_intent = ShardIntentHeader {
             core_params: core_params.clone(),
@@ -411,7 +410,7 @@ mmr_root: {}",
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: arr_mmr_peaks,
             // mmr: [H256::zero(); MMR_MAX_NUM_PEAKS],
-            requests: vec![input_subquery; HEADER_CAPACITY],
+            requests: vec![input_subquery; 1],//HEADER_CAPACITY],
             _phantom: PhantomData,
         });
         header_circuit.feed_input(shard_input).unwrap();
@@ -419,7 +418,7 @@ mmr_root: {}",
         let promises = [(
             ComponentTypeKeccak::<Fr>::get_type_id(),
             ComponentPromiseResultsInMerkle::from_single_shard(
-                generate_keccak_shards_from_calls(&header_circuit, 5000) //MAGIC KECCAK_F_CAPACITY)
+                generate_keccak_shards_from_calls(&header_circuit, KECCAK_F_CAPACITY)
                     .unwrap()
                     .into_logical_results(),
             ),
