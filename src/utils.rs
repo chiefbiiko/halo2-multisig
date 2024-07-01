@@ -120,36 +120,35 @@ pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256
     OutputSubqueryShard { results }
 }
 
-// /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
-// pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
-//     let peak = keccak256(&concat_bytes64(ZERO_32, (*leaf).into()));
-//     let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-//     let proof = vec![ZERO_32.into(), *leaf];
-//     (root, peak.into(), proof)
-// }
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-pub const MMR_SIZE_1_LE: [u8; 32] =
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
 /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
-/// Returns little-endian bytes.
 pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
-    let leaf:[u8; 32] = reverse_endianess((*leaf).into());
-    let peak = keccak256(&concat_bytes64(ZERO_32, leaf));
-    let root = keccak256(&concat_bytes64(MMR_SIZE_1_LE, peak)).into();
-    let proof = vec![ZERO_32.into(), leaf.into()];
+    let peak = keccak256(&concat_bytes64(ZERO_32, (*leaf).into()));
+    let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+    let proof = vec![ZERO_32.into(), *leaf];
     (root, peak.into(), proof)
 }
 
-fn reverse_endianess(arr: [u8; 32]) -> [u8; 32] {
-    let mut out = [0_u8; 32];
-    let mut j = 0;
-    for i in (0..arr.len()).rev() {
-        out[j] = arr[i];
-        j += 1;
-    }
-    out
-}
+///////////////////////////////////////////////////////////////////////////////
+
+// pub const MMR_SIZE_1_LE: [u8; 32] =
+//     [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+// /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
+// /// Returns little-endian bytes.
+// pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
+//     let leaf:[u8; 32] = reverse_endianess((*leaf).into());
+//     let peak = keccak256(&concat_bytes64(ZERO_32, leaf));
+//     let root = keccak256(&concat_bytes64(MMR_SIZE_1_LE, peak)).into();
+//     let proof = vec![ZERO_32.into(), leaf.into()];
+//     (root, peak.into(), proof)
+// }
+
+// fn reverse_endianess(arr: [u8; 32]) -> [u8; 32] {
+//     let mut out = [0_u8; 32];
+//     let mut j = 0;
+//     for i in (0..arr.len()).rev() {
+//         out[j] = arr[i];
+//         j += 1;
+//     }
+//     out
+// }
