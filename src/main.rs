@@ -245,8 +245,7 @@ async fn main() {
 
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
-        let core_params =
-            CoreParamsHeaderSubquery { capacity: 3, max_extra_data_bytes: MAX_EXTRA_DATA_BYTES };
+        let core_params = CoreParamsHeaderSubquery { capacity: 3, max_extra_data_bytes: MAX_EXTRA_DATA_BYTES };
         // let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
         let loader_params =
             PromiseLoaderParams { comp_loader_params: SingleComponentLoaderParams::new(3, vec![KECCAK_F_CAPACITY]) };
@@ -274,8 +273,7 @@ async fn main() {
         log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
         log::info!("mmr_peaks with len {} {:?}", &mmr_peaks.len(), &mmr_peaks);
 
-        let input_subquery =
-            CircuitInputHeaderSubquery { header_rlp, mmr_proof, field_idx: STATE_ROOT_INDEX as u32 };
+        let input_subquery = CircuitInputHeaderSubquery { header_rlp, mmr_proof, field_idx: STATE_ROOT_INDEX as u32 };
 
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
             mmr: mmr_peaks,
