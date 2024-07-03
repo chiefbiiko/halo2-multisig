@@ -465,10 +465,9 @@ async fn main() {
 
 //=====NOTES=====
 // - Currently stuck at `let snark_header = gen_snark_shplonk(...)` (line 442) failing with "SNARK proof failed to verify"
-// - What's wrong with our MMR? (`fn mmr_1` in utils)
+// - I suspect something is wrong with our MMR? (`fn mmr_1` in utils)
 //   - for this initial hacky version we are just trying to construct a MMR containing only one actual blockhash
 //   - we are computing a merke root of the single-blockhash array padded to 1024 items, then adding that as single leaf to the MMR
-// - Why prepend 10 zeros to the mmr (peaks) array in the header comp test? https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/tests.rs#L49
 // - What is `InputSubqueryAggregation.promise_commit_keccak` supposed to be?
 // - Does 1 level of aggregation suffice to get an EVM verifier?
 //     -> no we need at least one more level of aggregation to verify keccak promise commitments
