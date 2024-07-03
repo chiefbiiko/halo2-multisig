@@ -27,7 +27,7 @@ pub const NUM_LOOKUP_ADVICE: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L6
 pub const NUM_FIXED: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/storage/tests.rs#L87C29-L87C33
-pub const KECCAK_F_CAPACITY: usize = 200; //1200;
+pub const KECCAK_F_CAPACITY: usize = 44; //1200;
                                           //NOTE we only do a single storage proof at a time
 pub const STORAGE_CAPACITY: usize = 1;
 //NOTE we only do a single storage proof at a time

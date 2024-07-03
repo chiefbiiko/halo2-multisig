@@ -120,11 +120,27 @@ pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256
     OutputSubqueryShard { results }
 }
 
+// /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
+// pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
+//     let peak = keccak256(&concat_bytes64(ZERO_32, (*leaf).into()));
+//     let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+//     let proof = vec![ZERO_32.into(), *leaf];
+//     (root, peak.into(), proof)
+// }
+
 /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
+/// A leaf is a Merkle tree root of 1024 consecutive block hashes.
+/// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
 pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
-    let peak = keccak256(&concat_bytes64(ZERO_32, (*leaf).into()));
+
+    //ERROR must pad!!!!!! upto 1024
+    // let mroot: [u8; 32] = keccak256(concat_bytes64(ZERO_32, (*leaf).into()));
+    // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros.
+    let mroot1024 = TODO;
+
+    let peak = keccak256(&concat_bytes64(ZERO_32, mroot));
     let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-    let proof = vec![ZERO_32.into(), *leaf];
+    let proof = vec![ZERO_32.into(), mroot.into()];
     (root, peak.into(), proof)
 }
 
