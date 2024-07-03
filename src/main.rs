@@ -270,29 +270,15 @@ async fn main() {
             ComponentCircuitHeaderSubquery::<Fr>::prover(core_params, loader_params, header_pinning.clone());
 
         // mmr oracle
-        let (mmr_root, mmr_peak, mut mmr_proof) = mmr_1(&block_hash);
-        log::info!(
-            "mmr_leaf: {} \nmmr_proof: {:?} \nmmr_peak: {} \nmmr_root: {}",
-            const_hex::encode(&block_hash),
-            &mmr_proof,
-            const_hex::encode(&mmr_peak),
-            const_hex::encode(&mmr_root)
-        );
-
-        mmr_proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
-        let arr_mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = mmr_proof.try_into().expect("mmr proof");
-        log::info!("arr_mmr_proof with len {} {:?}", &arr_mmr_proof.len(), &arr_mmr_proof);
+        let (/*mmr_root,*/ mmr_peaks, mmr_proof) = mmr_1(&block_hash);
+        log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
+        log::info!("mmr_peaks with len {} {:?}", &mmr_peaks.len(), &mmr_peaks);
 
         let input_subquery =
-            CircuitInputHeaderSubquery { header_rlp, mmr_proof: arr_mmr_proof, field_idx: STATE_ROOT_INDEX as u32 };
-
-        let mut mmr_peaks = vec![mmr_peak];
-        mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
-        let arr_mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-        log::info!("arr_mmr_peaks {:?}", &arr_mmr_peaks);
+            CircuitInputHeaderSubquery { header_rlp, mmr_proof, field_idx: STATE_ROOT_INDEX as u32 };
 
         let shard_input = Box::new(CircuitInputHeaderShard::<Fr> {
-            mmr: arr_mmr_peaks,
+            mmr: mmr_peaks,
             requests: vec![input_subquery; 1],
             _phantom: PhantomData,
         });
@@ -480,13 +466,15 @@ async fn main() {
 }
 
 //=====NOTES=====
-// - Currently stuck at `let snark_header = gen_snark_shplonk(...)` failing with "SNARK proof failed to verify"
+// - Currently stuck at `let snark_header = gen_snark_shplonk(...)` (line 442) failing with "SNARK proof failed to verify"
+// - What's wrong with our MMR? (`fn mmr_1` in utils)
+//   - for this initial hacky version we are just trying to construct a MMR containing only one actual blockhash
+//   - we are computing a merke root of the single-blockhash array padded to 1024 items, then adding that as single leaf to the MMR
 // - Why prepend 10 zeros to the mmr (peaks) array in the header comp test? https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/src/components/subqueries/block_header/tests.rs#L49
 // - What is `InputSubqueryAggregation.promise_commit_keccak` supposed to be?
 // - Does 1 level of aggregation suffice to get an EVM verifier?
 //     -> no we need at least one more level of aggregation to verify keccak promise commitments
 //     -> see https://github.com/axiom-crypto/axiom-eth/tree/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query#subquery-aggregation-circuit
-
 //... gen_evm_proof_shplonk()
 //... gen_evm_calldata_shplonk()
 //... gen_evm_verifier_shplonk::<AggregationCircuit>(

@@ -10,7 +10,7 @@ use axiom_eth::{
     providers::{block::get_block_rlp, setup_provider},
     storage::circuit::EthStorageInput,
 };
-use axiom_query::components::subqueries::common::OutputSubqueryShard;
+use axiom_query::components::subqueries::{block_header::MMR_MAX_NUM_PEAKS, common::OutputSubqueryShard};
 use ethers_core::types::{Address, Block, Chain, EIP1186ProofResponse, H160, H256};
 use ethers_providers::{Middleware, Provider};
 use itertools::Itertools;
@@ -147,10 +147,10 @@ pub fn merkle_root(leaves: [H256; HISTORICAL_NUM_ROOTS]) -> [u8; 32] {
     return hashes[0].into();
 }
 
-/// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
+/// Computes the Merkle Mountain Range peaks, and proof for a single leaf.
 /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
 /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
-pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
+pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MAX_NUM_PEAKS - 1]) {
     // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros
     let mut leaves = [H256::zero(); HISTORICAL_NUM_ROOTS];
     leaves[0] = *leaf;
@@ -158,7 +158,15 @@ pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
     let mroot1024 = merkle_root(leaves);
 
     let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
-    let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-    let proof = vec![ZERO_32.into(), mroot1024.into()];
-    (root, peak.into(), proof)
+    // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+    let mut proof = vec![ZERO_32.into(), mroot1024.into()];
+
+    proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
+    let arr_mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = proof.try_into().expect("mmr proof");
+
+    let mut mmr_peaks: Vec<H256> = vec![peak.into()];
+    mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
+    let arr_mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
+
+    (/*root,*/ arr_mmr_peaks, arr_mmr_proof)
 }
