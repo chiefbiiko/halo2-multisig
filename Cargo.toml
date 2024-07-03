@@ -1,5 +1,5 @@
 [package]
-name = "halo2-scaffold"
+name = "halo2-multisig"
 version = "0.3.0"
 edition = "2021"
 
@@ -42,8 +42,9 @@ tiny-keccak = { version = "2.0.2", features = ["keccak"] }
 # halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", tag = "v0.4.1-git", default-features = false, features = ["halo2-axiom", "test-utils"] }
 # halo2-ecc = { git = "https://github.com/shreyas-londhe/halo2-lib.git", branch = "feat/secp256k1-hash2curve-poseidon", default-features = false, features = ["halo2-axiom"] }
 # snark-verifier-sdk = { git = "https://github.com/shreyas-londhe/snark-verifier.git", optional = true }
-axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers"] }
-axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
+axiom-eth = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["halo2-axiom", "providers", "aggregation"] }
+axiom-query = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false, features = ["keygen"]  }
+axiom-codec = { tag = "v2.0.17", git = "https://github.com/axiom-crypto/axiom-eth.git", default-features = false  }
 
 # crypto
 rlp = "0.5.2"
@@ -63,6 +64,12 @@ serde_yaml = { version = "0.9.16", optional = true }
 # halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "community-edition" }
 # snark-verifier-sdk = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "community-edition" }
 
+
+
+tokio = { version = "1", features = ["full"] }
+const-hex = "1.11.1"
+zerocopy = "0.7.32"
+
 [dev-dependencies]
 hex = "0.4.3"
 ark-std = { version = "0.3.0", features = ["print-trace"] }
@@ -79,7 +86,7 @@ futures = { version = "0.3" }
 blake3 = { version = "=1.5" }
 
 anyhow = "1.0.81"
-const-hex = "1.11.1"
+
 
 # halo2-scaffold = { branch = "feat/0.3.0", git = "https://github.com/axiom-crypto/halo2-scaffold.git" }
 # halo2-scaffold = { path = "../halo2-scaffold" }
@@ -87,14 +94,14 @@ const-hex = "1.11.1"
 
 
 [features]
-# default = ["halo2-axiom", "jemallocator", "display", "keygen"]
-# display = ["axiom-eth/display", "dep:ark-std"]
-# asm = ["axiom-eth/asm"]
-# revm = ["axiom-eth/revm"]
-# # halo2-pse = ["axiom-eth/halo2-pse"]
-# halo2-axiom = ["axiom-eth/halo2-axiom"]
-# jemallocator = ["axiom-eth/jemallocator"]
-# keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
+default = ["halo2-axiom", "jemallocator", "display", "keygen"]
+display = ["axiom-eth/display", "dep:ark-std"]
+asm = ["axiom-eth/asm"]
+revm = ["axiom-eth/revm"]
+# halo2-pse = ["axiom-eth/halo2-pse"]
+halo2-axiom = ["axiom-eth/halo2-axiom"]
+jemallocator = ["axiom-eth/jemallocator"]
+keygen = ["axiom-eth/keygen", "dep:enum_dispatch", "dep:clap", "dep:serde_yaml"]
 
 # scripts = ["snark-verifier-sdk"]
 
