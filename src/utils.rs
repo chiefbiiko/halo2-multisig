@@ -128,43 +128,37 @@ pub fn prepare<A: Clone>(results: Vec<(A, H256)>) -> OutputSubqueryShard<A, H256
 //     (root, peak.into(), proof)
 // }
 
+//FROM https://github.com/axiom-crypto/axiom-v2-periphery/blob/6482de3f73618b0df11f0955af2e1d1fb5a67a8e/src/libraries/MerkleTree.sol#L15
+pub const HISTORICAL_NUM_ROOTS: usize = 1024;
+pub fn merkle_root(leaves: [H256; HISTORICAL_NUM_ROOTS]) -> [u8; 32] {
+    // we create a new array to avoid mutating `leaves`, which is passed by reference
+    // unnecessary if calldata `leaves` is passed in since it is automatically copied to memory
+    let mut hashes: [H256; HISTORICAL_NUM_ROOTS / 2] = [H256::zero(); HISTORICAL_NUM_ROOTS / 2];
+    for i in 0..(HISTORICAL_NUM_ROOTS / 2) {
+        hashes[i] = keccak256(concat_bytes64(leaves[i << 1].into(), leaves[(i << 1) | 1].into())).into();
+    }
+    let mut len = HISTORICAL_NUM_ROOTS / 4;
+    while len != 0 {
+        for i in 0..len {
+            hashes[i] = keccak256(concat_bytes64(hashes[i << 1].into(), hashes[(i << 1) | 1].into())).into();
+        }
+        len = len / 2;
+    }
+    return hashes[0].into();
+}
+
 /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
 /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
 /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
 pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
+    // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros
+    let mut leaves = [H256::zero(); HISTORICAL_NUM_ROOTS];
+    leaves[0] = *leaf;
 
-    //ERROR must pad!!!!!! upto 1024
-    // let mroot: [u8; 32] = keccak256(concat_bytes64(ZERO_32, (*leaf).into()));
-    // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros.
-    let mroot1024 = TODO;
+    let mroot1024 = merkle_root(leaves);
 
-    let peak = keccak256(&concat_bytes64(ZERO_32, mroot));
+    let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
     let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-    let proof = vec![ZERO_32.into(), mroot.into()];
+    let proof = vec![ZERO_32.into(), mroot1024.into()];
     (root, peak.into(), proof)
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-// pub const MMR_SIZE_1_LE: [u8; 32] =
-//     [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-// /// Computes the Merkle Mountain Range root, peak, and proof for a single leaf.
-// /// Returns little-endian bytes.
-// pub fn mmr_1(leaf: &H256) -> (H256, H256, Vec<H256>) {
-//     let leaf:[u8; 32] = reverse_endianess((*leaf).into());
-//     let peak = keccak256(&concat_bytes64(ZERO_32, leaf));
-//     let root = keccak256(&concat_bytes64(MMR_SIZE_1_LE, peak)).into();
-//     let proof = vec![ZERO_32.into(), leaf.into()];
-//     (root, peak.into(), proof)
-// }
-
-// fn reverse_endianess(arr: [u8; 32]) -> [u8; 32] {
-//     let mut out = [0_u8; 32];
-//     let mut j = 0;
-//     for i in (0..arr.len()).rev() {
-//         out[j] = arr[i];
-//         j += 1;
-//     }
-//     out
-// }
