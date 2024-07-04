@@ -47,3 +47,5 @@ pub const MMR_SIZE_1: [u8; 32] =
 // 32 zero bytes
 pub const ZERO_32: [u8; 32] =
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// https://github.com/axiom-crypto/axiom-v2-contracts/blob/5514752e92e829d7da9a8da8988062d870460cab/contracts/libraries/MerkleMountainRange.sol#L7
+pub const MAX_MMR_PEAKS: usize = 32;

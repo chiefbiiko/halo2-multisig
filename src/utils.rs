@@ -147,6 +147,34 @@ pub fn merkle_root(leaves: [H256; HISTORICAL_NUM_ROOTS]) -> [u8; 32] {
     return hashes[0].into();
 }
 
+// /// Computes the Merkle Mountain Range peaks, and proof for a single leaf.
+// /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
+// /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
+// pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MAX_NUM_PEAKS - 1]) {
+//     // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros
+//     let mut leaves = [H256::zero(); HISTORICAL_NUM_ROOTS];
+//     leaves[0] = *leaf;
+
+//     let mroot1024 = merkle_root(leaves);
+
+//     // let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
+//     let peak = keccak256(&mroot1024);
+
+//     // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+    
+//     let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
+//     // mmr_proof[0] = ZERO_32.into();
+//     // mmr_proof[1] = mroot1024.into();
+//     mmr_proof[0] = mroot1024.into();
+
+//     let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
+//     mmr_peaks[0] = peak.into();
+
+//     (/*root,*/ mmr_peaks, mmr_proof)
+// }
+
+///////////////////////////////////////////////////////////////////////////////
+
 /// Computes the Merkle Mountain Range peaks, and proof for a single leaf.
 /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
 /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
@@ -157,18 +185,71 @@ pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MA
 
     let mroot1024 = merkle_root(leaves);
 
+    let peaks = [H256::zero(); MAX_MMR_PEAKS];
+
+
+
+
+
+
+////////////
+
     // let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
-    let peak = keccak256(&mroot1024);
+    // let peak = keccak256(&mroot1024);
+
+    //WIP workout pmmr commitment
+    // return keccak256(abi.encodePacked(self.paddedLeaf, peaks));
+    let padded_leaf = mroot1024;
+    // peaks[i] = root(list[((len >> i) << i) - 2^i : ((len >> i) << i)])` if 2^i & len != 0, otherwise 0
+    let peaks = [H256::zero(); MAX_MMR_PEAKS];
+    let mut peaks_len = 0;
+    
+    //TODO mmr append leaf:=
+
+
+    //TODO pmmr commit() 
+
+    /////////
+    // /// @notice Append a new element to the underlying list of the MMR
+    // /// @param  self The MMR
+    // /// @param  leaf The new element to append
+    // /// @return peaksChanged self.peaks[0 : peaksChanged] have been changed
+    // function appendLeaf(MMR memory self, bytes32 leaf) internal pure returns (uint256 peaksChanged) {
+    //     unchecked {
+    //         bytes32 newPeak = leaf;
+    //         uint256 i;
+    //         uint256 peaksLength = self.peaksLength;
+    //         for (; i < peaksLength && self.peaks[i] != bytes32(0);) {
+    //             newPeak = Hash.keccak(self.peaks[i], newPeak);
+    //             delete self.peaks[i];
+    //             ++i;
+    //         }
+    //         self.peaks[i] = newPeak;
+
+    //         if (i >= peaksLength) {
+    //             self.peaksLength = i + 1;
+    //         }
+
+    //         peaksChanged = i + 1;
+    //     }
+    // }
+
+
+
+
+    /////////
 
     // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
     
-    let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
-    // mmr_proof[0] = ZERO_32.into();
-    // mmr_proof[1] = mroot1024.into();
-    mmr_proof[0] = mroot1024.into();
+    // let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
+    // // mmr_proof[0] = ZERO_32.into();
+    // // mmr_proof[1] = mroot1024.into();
+    // mmr_proof[0] = mroot1024.into();
 
-    let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
-    mmr_peaks[0] = peak.into();
+    // let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
+    // mmr_peaks[0] = peak.into();
 
-    (/*root,*/ mmr_peaks, mmr_proof)
+    // (/*root,*/ mmr_peaks, mmr_proof)
+
+
 }
