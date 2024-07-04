@@ -246,9 +246,9 @@ async fn main() {
     let (header_pk, header_pinning, header_circuit) = {
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ assembling header shard");
         let core_params = CoreParamsHeaderSubquery { capacity: HEADER_CAPACITY, max_extra_data_bytes: MAX_EXTRA_DATA_BYTES };
-        // let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
-        let loader_params =
-            PromiseLoaderParams { comp_loader_params: SingleComponentLoaderParams::new(200, vec![KECCAK_F_CAPACITY]) };
+        let loader_params= PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY);
+        // let loader_params =
+        //     PromiseLoaderParams { comp_loader_params: SingleComponentLoaderParams::new(200, vec![KECCAK_F_CAPACITY]) };
         let header_intent = ShardIntentHeader {
             core_params: core_params.clone(),
             loader_params: loader_params.clone(),
