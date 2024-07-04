@@ -157,16 +157,18 @@ pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MA
 
     let mroot1024 = merkle_root(leaves);
 
-    let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
+    // let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
+    let peak = keccak256(&mroot1024);
+
     // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-    let mut proof = vec![ZERO_32.into(), mroot1024.into()];
+    
+    let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
+    // mmr_proof[0] = ZERO_32.into();
+    // mmr_proof[1] = mroot1024.into();
+    mmr_proof[0] = mroot1024.into();
 
-    proof.resize(MMR_MAX_NUM_PEAKS - 1, H256::zero());
-    let arr_mmr_proof: [H256; MMR_MAX_NUM_PEAKS - 1] = proof.try_into().expect("mmr proof");
+    let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
+    mmr_peaks[0] = peak.into();
 
-    let mut mmr_peaks: Vec<H256> = vec![peak.into()];
-    mmr_peaks.resize(MMR_MAX_NUM_PEAKS, H256::zero());
-    let arr_mmr_peaks: [H256; MMR_MAX_NUM_PEAKS] = mmr_peaks.try_into().expect("mmr peaks");
-
-    (/*root,*/ arr_mmr_peaks, arr_mmr_proof)
+    (/*root,*/ mmr_peaks, mmr_proof)
 }
