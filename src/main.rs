@@ -378,6 +378,8 @@ async fn main() {
             rlc_params,
         );
 
+        results_circuit.feed_input(results_input).expect("feed results");
+
 
         let mut promise_results = HashMap::new();
         let component_type_ids = vec![
@@ -406,11 +408,9 @@ async fn main() {
                 promise_results.insert(type_id, pr);
             }
         }
-
-
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ promise results keys {:?}", promise_results.keys());
 
-        results_circuit.feed_input(results_input).expect("feed results");
+
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
 
         (results_pk, results_pinning, results_circuit)
