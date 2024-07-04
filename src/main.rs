@@ -346,34 +346,6 @@ async fn main() {
         let promise_account = prepare(acct_subqueries);
         let promise_storage = prepare(storage_subqueries);
 
-        let mut promise_results = HashMap::new();
-        let component_type_ids = vec![
-            "axiom-query:ComponentTypeHeaderSubquery",
-            "axiom-query:ComponentTypeAccountSubquery",
-            "axiom-query:ComponentTypeStorageSubquery",
-            "axiom-eth:ComponentTypeKeccak",
-        ]
-        .into_iter()
-        .map(|s| s.to_string());
-        // for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
-        for (type_id, pr) in component_type_ids.zip_eq([
-            shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(promise_header.convert_into()),
-            shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
-                promise_account.convert_into(),
-            ),
-            shard_into_component_promise_results::<Fr, ComponentTypeStorageSubquery<Fr>>(
-                promise_storage.convert_into(),
-            ),
-            ComponentPromiseResultsInMerkle::from_single_shard(
-                generate_keccak_shards_from_calls(&storage_circuit, KECCAK_F_CAPACITY).unwrap().into_logical_results(),
-            ),
-        ]) {
-            // filter out empty shards with capacity = 0.
-            if !pr.shards()[0].1.is_empty() {
-                promise_results.insert(type_id, pr);
-            }
-        }
-
         let results_input = Box::new(CircuitInputResultsRootShard::<Fr> {
             subqueries: SubqueryResultsTable::<Fr>::new(
                 results.clone().into_iter().map(|r| r.try_into().unwrap()).collect_vec(),
@@ -405,6 +377,36 @@ async fn main() {
             (single_promise_loader, promise_results_params.clone()),
             rlc_params,
         );
+
+
+        let mut promise_results = HashMap::new();
+        let component_type_ids = vec![
+            "axiom-query:ComponentTypeHeaderSubquery",
+            "axiom-query:ComponentTypeAccountSubquery",
+            "axiom-query:ComponentTypeStorageSubquery",
+            "axiom-eth:ComponentTypeKeccak",
+        ]
+        .into_iter()
+        .map(|s| s.to_string());
+        // for (type_id, pr) in SubqueryDependencies::<Fr>::get_component_type_ids().into_iter().zip_eq([
+        for (type_id, pr) in component_type_ids.zip_eq([
+            shard_into_component_promise_results::<Fr, ComponentTypeHeaderSubquery<Fr>>(promise_header.convert_into()),
+            shard_into_component_promise_results::<Fr, ComponentTypeAccountSubquery<Fr>>(
+                promise_account.convert_into(),
+            ),
+            shard_into_component_promise_results::<Fr, ComponentTypeStorageSubquery<Fr>>(
+                promise_storage.convert_into(),
+            ),
+            ComponentPromiseResultsInMerkle::from_single_shard(
+                generate_keccak_shards_from_calls(&results_circuit, KECCAK_F_CAPACITY).unwrap().into_logical_results(),
+            ),
+        ]) {
+            // filter out empty shards with capacity = 0.
+            if !pr.shards()[0].1.is_empty() {
+                promise_results.insert(type_id, pr);
+            }
+        }
+
 
         results_circuit.feed_input(results_input).expect("feed results");
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
