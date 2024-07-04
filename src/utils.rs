@@ -186,10 +186,31 @@ pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MA
     let mroot1024 = merkle_root(leaves);
 
     let peaks = [H256::zero(); MAX_MMR_PEAKS];
+    let mut peaks_len = 0;
+
+    //begin appendLeaf
+    let new_peak = *leaf;
+    let i = 0;
+    let peaks_len = 0;
+    while i < peaks_len && peaks[i] != H256::zero() {
+        new_peak = keccak256(concat_bytes64(peaks[i].into(), new_peak.into())).into();
+        peaks[i] = H256::zero();
+        i = i + 1;
+    }
+    peaks[i] = new_peak;
+
+    //shouldn't be the case for us
+    // if (i >= peaksLength) {
+    //     self.peaksLength = i + 1;
+    // }
+    //we dont need it as long as we only append 1 leaf
+    // peaksChanged = i + 1;
+    //end appendLeaf
 
 
 
 
+    
 
 
 ////////////
@@ -199,10 +220,10 @@ pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MA
 
     //WIP workout pmmr commitment
     // return keccak256(abi.encodePacked(self.paddedLeaf, peaks));
-    let padded_leaf = mroot1024;
-    // peaks[i] = root(list[((len >> i) << i) - 2^i : ((len >> i) << i)])` if 2^i & len != 0, otherwise 0
-    let peaks = [H256::zero(); MAX_MMR_PEAKS];
-    let mut peaks_len = 0;
+    // let padded_leaf = mroot1024;
+    // // peaks[i] = root(list[((len >> i) << i) - 2^i : ((len >> i) << i)])` if 2^i & len != 0, otherwise 0
+    // let peaks = [H256::zero(); MAX_MMR_PEAKS];
+    // let mut peaks_len = 0;
     
     //TODO mmr append leaf:=
 
