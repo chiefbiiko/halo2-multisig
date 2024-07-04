@@ -305,7 +305,8 @@ async fn main() {
         let mut params_per_comp = HashMap::new();
         params_per_comp.insert(
             ComponentTypeHeaderSubquery::<Fr>::get_type_id(),
-            SingleComponentLoaderParams::new(4, vec![KECCAK_F_CAPACITY]),
+            // SingleComponentLoaderParams::new(4, vec![KECCAK_F_CAPACITY]),
+            SingleComponentLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY),
         );
         params_per_comp.insert(
             ComponentTypeAccountSubquery::<Fr>::get_type_id(),
