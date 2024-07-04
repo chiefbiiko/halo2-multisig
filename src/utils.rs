@@ -147,6 +147,34 @@ pub fn merkle_root(leaves: [H256; HISTORICAL_NUM_ROOTS]) -> [u8; 32] {
     return hashes[0].into();
 }
 
+// /// Computes the Merkle Mountain Range peaks, and proof for a single leaf.
+// /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
+// /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
+// pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MAX_NUM_PEAKS - 1]) {
+//     // build merkle tree with 1024 leafs and only the first being the blockhash while the rest are all zeros
+//     let mut leaves = [H256::zero(); HISTORICAL_NUM_ROOTS];
+//     leaves[0] = *leaf;
+
+//     let mroot1024 = merkle_root(leaves);
+
+//     // let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
+//     let peak = keccak256(&mroot1024);
+
+//     // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
+    
+//     let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
+//     // mmr_proof[0] = ZERO_32.into();
+//     // mmr_proof[1] = mroot1024.into();
+//     mmr_proof[0] = mroot1024.into();
+
+//     let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
+//     mmr_peaks[0] = peak.into();
+
+//     (/*root,*/ mmr_peaks, mmr_proof)
+// }
+
+///////////////////////////////////////////////////////////////////////////////
+
 /// Computes the Merkle Mountain Range peaks, and proof for a single leaf.
 /// A leaf is a Merkle tree root of 1024 consecutive block hashes.
 /// https://github.com/axiom-crypto/axiom-docs/blob/main/docs/protocol/protocol-design/caching-block-hashes.md
@@ -157,18 +185,32 @@ pub fn mmr_1(leaf: &H256) -> (/*H256,*/ [H256; MMR_MAX_NUM_PEAKS], [H256; MMR_MA
 
     let mroot1024 = merkle_root(leaves);
 
-    // let peak = keccak256(&concat_bytes64(ZERO_32, mroot1024));
-    let peak = keccak256(&mroot1024);
+    let mut peaks = [H256::zero(); MAX_MMR_PEAKS];
+    let mut peaks_len = 0;
 
-    // let root = keccak256(&concat_bytes64(MMR_SIZE_1, peak)).into();
-    
-    let mut mmr_proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
+    //begin appendLeaf
+    let mut new_peak = *leaf;
+    let mut i = 0;
+    let peaks_len = 0;
+    while i < peaks_len && peaks[i] != H256::zero() {
+        new_peak = keccak256(concat_bytes64(peaks[i].into(), new_peak.into())).into();
+        peaks[i] = H256::zero();
+        i = i + 1;
+    }
+    peaks[i] = new_peak;
+
+    //shouldn't be the case for us
+    // if (i >= peaksLength) {
+    //     self.peaksLength = i + 1;
+    // }
+    //we dont need it as long as we only append 1 leaf
+    // peaksChanged = i + 1;
+    //end appendLeaf
+
+    let mut proof = [H256::zero(); MMR_MAX_NUM_PEAKS - 1];
     // mmr_proof[0] = ZERO_32.into();
     // mmr_proof[1] = mroot1024.into();
-    mmr_proof[0] = mroot1024.into();
+    proof[0] = mroot1024.into();
 
-    let mut mmr_peaks = [H256::zero(); MMR_MAX_NUM_PEAKS];
-    mmr_peaks[0] = peak.into();
-
-    (/*root,*/ mmr_peaks, mmr_proof)
+    (peaks, proof)
 }
