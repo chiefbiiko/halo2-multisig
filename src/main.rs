@@ -408,6 +408,8 @@ async fn main() {
         }
 
 
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ promise results keys {:?}", promise_results.keys());
+
         results_circuit.feed_input(results_input).expect("feed results");
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
 
