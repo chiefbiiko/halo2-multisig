@@ -356,7 +356,7 @@ async fn main() {
         let logical_results = LogicOutputResultsRoot { results, subquery_hashes, num_subqueries };
         //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞
 
-        let single_promise_loader = PromiseLoaderParams::new_for_one_shard(200); //MAGIC
+        let single_promise_loader = PromiseLoaderParams::new_for_one_shard(KECCAK_F_CAPACITY); //was200MAGIC 
         let results_intent = ShardIntentResultsRoot {
             core_params: CoreParamsResultRoot { capacity: RESULTS_CAPACITY, enabled_types },
             loader_params: (single_promise_loader.clone(), promise_results_params.clone()),
