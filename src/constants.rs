@@ -19,7 +19,7 @@ pub const STORAGE_ROOT_INDEX: usize = 2;
 /// Index of the state root in a block header.
 pub const STATE_ROOT_INDEX: usize = 3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-eth/configs/tests/storage.json#L10
-pub const NUM_RLC_COLUMNS: usize = 3;
+pub const NUM_RLC_COLUMNS: usize = 2;//3;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L4
 pub const NUM_ADVICE: usize = 19;
 //FROM https://github.com/axiom-crypto/axiom-eth/blob/0a218a7a68c5243305f2cd514d72dae58d536eff/axiom-query/configs/test/subquery_aggregation_for_agg.json#L5

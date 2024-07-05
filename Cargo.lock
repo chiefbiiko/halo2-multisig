@@ -338,7 +338,7 @@ checksum = "0c4b4d0bd25bd0b74681c0ad21497610ce1b7c91b1022cd21c80c6fbdd9476b0"
 [[package]]
 name = "axiom-codec"
 version = "0.2.1"
-source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#4730634864cb8b63d3a087e4c45b0c1a44a43b2d"
+source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#df2c303bf14a0135becabe37c695514fcf3764e9"
 dependencies = [
  "anyhow",
  "axiom-eth",
@@ -352,7 +352,7 @@ dependencies = [
 [[package]]
 name = "axiom-eth"
 version = "0.4.3"
-source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#4730634864cb8b63d3a087e4c45b0c1a44a43b2d"
+source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#df2c303bf14a0135becabe37c695514fcf3764e9"
 dependencies = [
  "anyhow",
  "ark-std 0.3.0",
@@ -391,7 +391,7 @@ dependencies = [
 [[package]]
 name = "axiom-query"
 version = "2.0.17"
-source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#4730634864cb8b63d3a087e4c45b0c1a44a43b2d"
+source = "git+https://github.com/chiefbiiko/axiom-eth.git?branch=mute-mmr#df2c303bf14a0135becabe37c695514fcf3764e9"
 dependencies = [
  "anyhow",
  "axiom-codec",
