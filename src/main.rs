@@ -410,8 +410,9 @@ async fn main() {
         }
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ promise results keys {:?}", promise_results.keys());
 
-
         results_circuit.fulfill_promise_results(&promise_results).unwrap();
+
+        results_circuit.calculate_params(); // must be called after fulfill_promise_results()
 
         (results_pk, results_pinning, results_circuit)
     };
