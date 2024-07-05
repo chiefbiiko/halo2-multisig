@@ -473,14 +473,14 @@ async fn main() {
     //WIP
     let (subq_proof, solidity_verifier, instances) = {
         let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
-        let mut vk_file = File::create(&subq_aggr_vk_path).expect("hdr vk bin file");
+        let mut vk_file = File::create(&subq_aggr_vk_path).expect("subq vk bin file");
         let subq_aggr_vk = subq_aggr_pk
             .get_vk();
         subq_aggr_vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes)
-            .expect("hdr vk bin write");
+            .expect("subq vk bin write");
 
-        let subq_aggr_inst = subq_aggr_circuit.num_instance();
-
+        // let subq_aggr_inst = subq_aggr_circuit.num_instance();
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_verifier_shplonk");
         let solidity_verifier = gen_evm_verifier_shplonk::<AggregationCircuit>(
             &kzg_params,
             subq_aggr_vk,
@@ -488,6 +488,7 @@ async fn main() {
             Some(Path::new(&subq_aggr_sol_verifier_path)),
         );
 
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_proof_shplonk");
         let instances = subq_aggr_circuit.instances();
         //4later
         // let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
@@ -500,7 +501,7 @@ async fn main() {
     };
 
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
-    evm_verify(solidity_verifier.clone(), instances.clone(), subq_proof);
+    evm_verify(solidity_verifier, instances, subq_proof);
 }
 
 //=====NOTES=====
