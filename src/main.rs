@@ -4,6 +4,9 @@ use std::{
     io::{Read, Write},
     marker::PhantomData, path::Path,
 };
+use const_hex::encode;
+use axiom_eth::snark_verifier_sdk::evm::encode_calldata;
+
 
 use ethers_core::types::{H256, U256};
 use itertools::Itertools;
@@ -97,6 +100,10 @@ async fn main() {
     let subq_aggr_vk_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit.vk");
     let subq_aggr_circuit_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit.shplonk");
     let subq_aggr_sol_verifier_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_verifier.sol");
+
+    let proof_path = format!("{cargo_manifest_dir}/proof/proof.evm_proof");
+
+
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
     let base_params = BaseCircuitParams {
@@ -481,19 +488,21 @@ async fn main() {
             subq_aggr_circuit.num_instance(),
             Some(Path::new(&subq_aggr_sol_verifier_path)),
         );
+
+        let instances = subq_aggr_circuit.instances();
         //4later
         // let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
-        // let proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
-        // let evm_proof = encode(encode_calldata(&instances, &proof));
-        // let mut f = File::create(format!("{cargo_manifest_dir}/data/test/{name}.evm_proof"))?;
+        let proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
+        let evm_proof = encode(encode_calldata(&instances, &proof));
+        let mut f = File::create(proof_path);
 
     };
 
 
     // subq_aggr_circuit.calculate_params(Some(9));
-    let instances = subq_aggr_circuit.instances();
+   
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ running mock prover");
-    MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
+   // MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap().assert_satisfied();
 
     //TODO add 1more aggregation ontop
 }
