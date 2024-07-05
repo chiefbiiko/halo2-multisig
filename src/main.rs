@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     fs::File,
     io::{Read, Write},
-    marker::PhantomData,
+    marker::PhantomData, path::Path,
 };
 
 use ethers_core::types::{H256, U256};
@@ -17,14 +17,12 @@ use axiom_codec::{
 };
 use axiom_eth::{
     block_header::get_block_header_rlp_max_lens_from_extra,
-    halo2_base::utils::halo2::KeygenCircuitIntent,
-    halo2_base::{gates::circuit::BaseCircuitParams, halo2_proofs::halo2curves::bn256::Fr, utils::fs::gen_srs},
+    halo2_base::{gates::circuit::{BaseCircuitParams, CircuitBuilderStage}, halo2_proofs::halo2curves::bn256::Fr, utils::{fs::gen_srs, halo2::KeygenCircuitIntent}},
     halo2_proofs::dev::MockProver,
     keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak},
     rlc::circuit::RlcCircuitParams,
     snark_verifier_sdk::{
-        halo2::{aggregation::AggregationConfigParams, gen_snark_shplonk},
-        CircuitExt,
+        evm::{gen_evm_proof_shplonk, gen_evm_verifier_shplonk}, halo2::{aggregation::{AggregationCircuit, AggregationConfigParams}, gen_snark_shplonk}, CircuitExt
     },
     utils::{
         build_utils::pinning::{aggregation::AggregationCircuitPinning, Halo2CircuitPinning, PinnableCircuit},
@@ -94,6 +92,11 @@ async fn main() {
     let results_pk_path = format!("{cargo_manifest_dir}/artifacts/results_circuit.pk");
     let results_vk_path = format!("{cargo_manifest_dir}/artifacts/results_circuit.vk");
     let results_circuit_path = format!("{cargo_manifest_dir}/artifacts/results_circuit.shplonk");
+    let subq_aggr_pinning_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit_pinning.json");
+    let subq_aggr_pk_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit.pk");
+    let subq_aggr_vk_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit.vk");
+    let subq_aggr_circuit_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_circuit.shplonk");
+    let subq_aggr_sol_verifier_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_verifier.sol");
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
     let base_params = BaseCircuitParams {
@@ -460,6 +463,41 @@ async fn main() {
     }
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
+
+    //TODO
+
+    let asdsfd = {
+        // let mut keygen_circuit = input.clone().build(
+        //     CircuitBuilderStage::Keygen,
+        //     subq_aggr_params,
+        //     &params,
+        // )?;
+        let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
+        // let keygen_circuit = header_intent.build_keygen_circuit();
+        // let (header_pk, header_pinning) =
+        //     keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
+        let mut vk_file = File::create(&subq_aggr_vk_path).expect("hdr vk bin file");
+        let subq_aggr_vk = subq_aggr_pk
+            .get_vk();
+        subq_aggr_vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes)
+            .expect("hdr vk bin write");
+
+        let subq_aggr_inst = subq_aggr_circuit.num_instance();
+
+        let _solidity_code = gen_evm_verifier_shplonk::<AggregationCircuit>(
+            &kzg_params,
+            subq_aggr_vk,
+            subq_aggr_circuit.num_instance(),
+            Some(Path::new(&subq_aggr_sol_verifier_path)),
+        );
+        //WIP
+        // let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
+        // let proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
+        // let evm_proof = encode(encode_calldata(&instances, &proof));
+        // let mut f = File::create(format!("{cargo_manifest_dir}/data/test/{name}.evm_proof"))?;
+
+    };
+
 
     // subq_aggr_circuit.calculate_params(Some(9));
     let instances = subq_aggr_circuit.instances();
