@@ -464,18 +464,9 @@ async fn main() {
     .prover_circuit(subq_aggr_pinning, &kzg_params)
     .expect("subquery aggregation circuit");
 
-    //TODO
-
+    //WIP
     let asdsfd = {
-        // let mut keygen_circuit = input.clone().build(
-        //     CircuitBuilderStage::Keygen,
-        //     subq_aggr_params,
-        //     &params,
-        // )?;
         let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
-        // let keygen_circuit = header_intent.build_keygen_circuit();
-        // let (header_pk, header_pinning) =
-        //     keygen_circuit.create_pk(&kzg_params, &header_pk_path, &header_pinning_path).expect("hdr pk and pinning");
         let mut vk_file = File::create(&subq_aggr_vk_path).expect("hdr vk bin file");
         let subq_aggr_vk = subq_aggr_pk
             .get_vk();
@@ -490,7 +481,7 @@ async fn main() {
             subq_aggr_circuit.num_instance(),
             Some(Path::new(&subq_aggr_sol_verifier_path)),
         );
-        //WIP
+        //4later
         // let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
         // let proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
         // let evm_proof = encode(encode_calldata(&instances, &proof));
