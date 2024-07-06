@@ -471,9 +471,7 @@ async fn main() {
     .expect("subquery aggregation circuit");
 
     //WIP
-
-    // TODO back when MockProver is ok
-    // let (subq_proof, solidity_verifier, instances) = {
+    let (subq_proof, solidity_verifier, instances) = {
         let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
         let mut vk_file = File::create(&subq_aggr_vk_path).expect("subq vk bin file");
         let subq_aggr_vk = subq_aggr_pk
@@ -493,25 +491,23 @@ async fn main() {
 
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_proof_shplonk");
         let instances = subq_aggr_circuit.instances();
-        let instances = subq_aggr_circuit.instances();
-        let prover = MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap();
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ MOCK PROOF OK?? = , {:?}", prover.verify());
+
+        //  Just for testing b4 doing the real proof
+        // let prover = MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap();
+        // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ MOCK PROOF OK?? = , {:?}", prover.verify());
 
 
-        // 4later when MockProver is ok
-        // let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
-        // let subq_proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
-        // let evm_proof = encode(encode_calldata(&instances, &subq_proof));
-        // let mut f = File::create(evm_proof_path).expect("proof file");
-        // f.write(evm_proof.as_bytes()).expect("write proof");
+        let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
+        let subq_proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
+        let evm_proof = encode(encode_calldata(&instances, &subq_proof));
+        let mut f = File::create(evm_proof_path).expect("proof file");
+        f.write(evm_proof.as_bytes()).expect("write proof");
 
-        // (subq_proof, solidity_verifier, instances)
-    // };
+        (subq_proof, solidity_verifier, instances)
+    };
 
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
-
-    // TODO back when MockProver is ok
-    // evm_verify(solidity_verifier, instances, subq_proof);
+    evm_verify(solidity_verifier, instances, subq_proof);
 }
 
 //=====NOTES=====
