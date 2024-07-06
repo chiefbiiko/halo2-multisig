@@ -1,46 +1,58 @@
 {
-    "name": "app",
+    "name": "dapp",
     "version": "0.0.0",
     "private": true,
-    "author": "",
-    "description": "simple frontend",
+    "author": "0xab",
+    "description": "ui",
     "dependencies": {
-        "@rebass/forms": "4.0.6",
-        "@reduxjs/toolkit": "1.8.1",
-        "@safe-global/api-kit": "2.4.2",
-        "@safe-global/protocol-kit": "4.0.2",
-        "ethers": "6.13.1",
-        "react": "17.0.2",
-        "react-dom": "17.0.2",
-        "react-modal": "3.14.3",
-        "react-redux": "7.2.4",
-        "react-scripts": "4.0.3",
-        "rebass": "4.0.7",
-        "redux-thunk": "2.3.0"
+      "@craco/craco": "7.0.0",
+      "@ethersproject/bignumber": "5.7.0",
+      "@ethersproject/providers": "5.7.2",
+      "@metamask/sdk": "0.3.2",
+      "@rebass/forms": "4.0.6",
+      "@reduxjs/toolkit": "1.9.2",
+      "assert": "2.0.0",
+      "ethers": "6.0.2",
+      "lodash": "4.17.21",
+      "process": "0.11.10",
+      "react": "18.2.0",
+      "react-dom": "18.2.0",
+      "react-modal": "3.16.1",
+      "react-redux": "8.0.5",
+      "react-responsive": "9.0.2",
+      "react-scripts": "5.0.1",
+      "rebass": "4.0.7",
+      "redux-thunk": "2.4.2"
     },
     "scripts": {
-        "start": "react-scripts --openssl-legacy-provider start",
-        "build": "react-scripts --openssl-legacy-provider build",
-        "test": "react-scripts test",
-        "fmt": "npx prettier --no-semi --arrow-parens avoid --trailing-comma none --print-width 80 --write './src/*.js'"
+      "start": "craco start",
+      "build": "craco build",
+      "postinstall": "npx --yes patch-package@6.5.1",
+      "test": "craco test",
+      "fmt": "npx --yes prettier --no-semi --arrow-parens avoid --trailing-comma none --print-width 80 --write '{,!(node_modules)/**/}*.js'"
     },
     "homepage": ".",
     "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
+      "extends": [
+        "react-app",
+        "react-app/jest"
+      ]
     },
     "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
+      "production": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+      ],
+      "development": [
+        "last 1 chrome version",
+        "last 1 firefox version",
+        "last 1 safari version"
+      ]
+    },
+    "devDependencies": {
+      "buffer": "6.0.2",
+      "crypto": "npm:crypto-browserify@3.12.0",
+      "url": "0.11.1"
     }
-}
+  }

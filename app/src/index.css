@@ -1,23 +1,47 @@
 @font-face {
     font-family: ChicagoFLF;
-    src: local('ChicagoFLF'), url('./ChicagoFLF.woff2') format('woff2');
+    src: local('ChicagoFLF'), url('/public/ChicagoFLF.woff2') format('woff2');
     font-display: swap;
   }
   
   body {
-    font: 400 20px ChicagoFLF, sans-serif;
+    font: 400 16px 'Open Sans', sans-serif;
     margin: 0;
+    background: url('/public/glo.jpeg');
+    background-size: cover;
   }
   
   #root {
     line-height: 1.5;
+  
     color: #000;
-    background-color: #fff;
     margin: auto;
+    max-width: 43.75em;
   }
   
-  input::placeholder{
-    text-align:center;
+  input::placeholder {
+    text-align: center;
+  }
+  
+  #token-input input::placeholder {
+    text-align: right;
+  }
+  
+  .token-option {
+    font-weight: normal;
+  }
+  
+  .token-option:hover {
+    font-weight: bold;
+  }
+  
+  .bermuda-button:active {
+    box-shadow: 0 0;
+  }
+  
+  .responsive-modal {
+    position: none !important;
+    padding: 0 !important;
   }
   
   .ReactModal__Content {
@@ -37,12 +61,13 @@
     box-shadow: 9999px 0 0 -5px;
     -webkit-animation: three-dots-pulse 1.5s infinite linear;
     animation: three-dots-pulse 1.5s infinite linear;
-    -webkit-animation-delay: .25s;
-    animation-delay: .25s;
+    -webkit-animation-delay: 0.25s;
+    animation-delay: 0.25s;
   }
   
-  .three-dots-pulse::before, .three-dots-pulse::after {
-    content: "";
+  .three-dots-pulse::before,
+  .three-dots-pulse::after {
+    content: '';
     display: inline-block;
     position: absolute;
     top: 0;
@@ -65,42 +90,45 @@
     box-shadow: 10014px 0 0 -5px;
     -webkit-animation: three-dots-pulse-after 1.5s infinite linear;
     animation: three-dots-pulse-after 1.5s infinite linear;
-    -webkit-animation-delay: .5s;
-    animation-delay: .5s;
+    -webkit-animation-delay: 0.5s;
+    animation-delay: 0.5s;
   }
   
   @keyframes three-dots-pulse-before {
     0% {
-        box-shadow: 9984px 0 0 -5px;
-   }
+      box-shadow: 9984px 0 0 -5px;
+    }
     30% {
-        box-shadow: 9984px 0 0 2px;
-   }
-    60%, 100% {
-        box-shadow: 9984px 0 0 -5px;
-   }
+      box-shadow: 9984px 0 0 2px;
+    }
+    60%,
+    100% {
+      box-shadow: 9984px 0 0 -5px;
+    }
   }
   
   @keyframes three-dots-pulse {
     0% {
-        box-shadow: 9999px 0 0 -5px;
-   }
+      box-shadow: 9999px 0 0 -5px;
+    }
     30% {
-        box-shadow: 9999px 0 0 2px;
-   }
-    60%, 100% {
-        box-shadow: 9999px 0 0 -5px;
-   }
+      box-shadow: 9999px 0 0 2px;
+    }
+    60%,
+    100% {
+      box-shadow: 9999px 0 0 -5px;
+    }
   }
   
   @keyframes three-dots-pulse-after {
     0% {
-        box-shadow: 10014px 0 0 -5px;
-   }
+      box-shadow: 10014px 0 0 -5px;
+    }
     30% {
-        box-shadow: 10014px 0 0 2px;
-   }
-    60%, 100% {
-        box-shadow: 10014px 0 0 -5px;
-   }
+      box-shadow: 10014px 0 0 2px;
+    }
+    60%,
+    100% {
+      box-shadow: 10014px 0 0 -5px;
+    }
   }

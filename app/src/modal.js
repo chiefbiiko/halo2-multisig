@@ -1,7 +1,8 @@
-import { default as ReactModal } from "react-modal"
-import { useSelector, useDispatch } from "react-redux"
-import { Text, Button, Flex, Box } from "rebass"
-import { dump } from "./redux"
+import { default as ReactModal } from 'react-modal'
+import { useSelector, useDispatch } from 'react-redux'
+import { Text, Flex, Box } from 'rebass'
+import Button from './button'
+import { dump } from './redux'
 
 export default function Modal() {
   const dispatch = useDispatch()
@@ -11,43 +12,40 @@ export default function Modal() {
       isOpen={!!modalText}
       onRequestClose={() => dispatch(dump({ modalText: null }))}
       contentLabel="info overlay modal"
-      appElement={document.getElementById("root")}
+      appElement={document.getElementById('root')}
+      className="responsive-modal"
     >
       <Flex
         style={{
-          justifyContent: "center",
-          marginTop: window.innerHeight < 300 ? "0" : "20vh"
+          justifyContent: 'center',
+          marginTop: window.innerHeight < 300 ? '0' : '20vh'
         }}
       >
         <Box
           sx={{
-            background: "#fff",
-            border: "0.1875em solid #000",
-            boxShadow: "0 0.625em",
-            padding: "0.625em",
-            overflow: "hidden",
-            textAlign: "center",
-            fontSize: ["1em", "1.25em"]
+            background: '#fff',
+            border: '0.1875em solid #000',
+            boxShadow: '0 0.625em',
+            padding: '0.625em',
+            wordWrap: 'break-word',
+            textAlign: 'center',
+            fontSize: ['1em', '1.25em']
           }}
         >
-          <Text sx={{ fontWeight: "bold", marginBottom: "0.625em" }}>
+          <Text sx={{ fontWeight: 'bold', marginBottom: '0.625em' }}>
             {modalTitle}
           </Text>
-          <Text sx={{ font: "1em Open Sans, normal", marginBottom: "0.625em" }}>
+          <Text sx={{ font: '1em Open Sans, normal', marginBottom: '1.25em' }}>
             {modalText}
           </Text>
           <Button
-            style={{
-              color: "#000",
-              cursor: "pointer",
-              margin: "1.25em 0.625em 0 0.625em",
-              fontWeight: "bold"
-            }}
+            aria-label="Ok"
+            style={{ width: 'auto', marginBottom: '0.625em' }}
             onClick={() => dispatch(dump({ modalText: null }))}
           >
-            ok
+            Ok
           </Button>
-          <div style={{ clear: "both" }}></div>
+          <div style={{ clear: 'both' }}></div>
         </Box>
       </Flex>
     </ReactModal>
