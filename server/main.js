@@ -23,6 +23,8 @@ app.get('/getStorageProof', (req, res) => {
 
     const rustExecutable = path.resolve(__dirname, '../target/release/halo2-multisig');
 
+    console.log("Running proover")
+
     execFile(rustExecutable, [masterSafeAddress, msgHash],options, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
@@ -36,6 +38,7 @@ app.get('/getStorageProof', (req, res) => {
 
         let proof;
         try {
+            console.log("returning proof");
             proof = stdout.trim();
         } catch (e) {
             console.error(`Failed to process output: ${e.message}`);
