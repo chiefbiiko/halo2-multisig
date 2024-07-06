@@ -47,12 +47,8 @@ let sdk
 
 export function sign(masterSafe, oldSigner, newSigner) {
    return async function(dispatch, getState) {
-    metamask = new MetaMask()
-    const provider = new ethers.JsonRpcProvider(
-        process.env.RPC ?? "https://rpc.gnosis.gateway.fm"
-      )
-    
-    //   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider)
+    const msg = JSON.stringify({masterSafe, oldSigner, newSigner})
+
     const signer = await getSigner()
     
       const ethAdapter = new EthersAdapter({
@@ -66,7 +62,7 @@ export function sign(masterSafe, oldSigner, newSigner) {
       })
       const rawData = new ethers.Interface([
         "function signMessage(bytes calldata _data)"
-      ]).encodeFunctionData("signMessage", [Buffer.from(process.env.MSG, "utf8")])
+      ]).encodeFunctionData("signMessage", [Buffer.from(msg, "utf8")])
       const safeTransactionData = {
         to: SIGN_MSG_LIB,
         data: rawData,
@@ -96,9 +92,9 @@ export function sign(masterSafe, oldSigner, newSigner) {
       })
     
       console.log(
-        `proposed: Safe ---delegatecall---> SignMessageLib.signMessage("${process.env.MSG}")`
+        `proposed: Safe ---delegatecall---> SignMessageLib.signMessage(${msg})`
       )
-      console.log("safe tx hash", safeTxHash)
+      console.log("safe tx hash:", safeTxHash)
    }
 }
 
