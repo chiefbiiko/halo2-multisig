@@ -6,7 +6,7 @@ pub const STORAGE_PROOF_MAX_DEPTH: usize = 13;
 /// Our header shard gate chip has 63_710_878 advice cells in phase 0
 /// With NUM_ADVICE=19 advice columns that's 3_315_789.4736842103 rows
 /// 2**21=2_097_152; 2**22=4_194_304 :: 2**22 got Killed: 9 on my 36gram m3 macos
-pub const K: usize = 21;
+pub const K: usize = 23;
 /// If you need to use range checks, a good default is to set `lookup_bits` to 1 less than `k`.
 pub const LOOKUP_BITS: usize = K - 1;
 /// Constraints are ignored if set to true.
