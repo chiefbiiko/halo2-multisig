@@ -1,0 +1,106 @@
+@font-face {
+    font-family: ChicagoFLF;
+    src: local('ChicagoFLF'), url('./ChicagoFLF.woff2') format('woff2');
+    font-display: swap;
+  }
+  
+  body {
+    font: 400 20px ChicagoFLF, sans-serif;
+    margin: 0;
+  }
+  
+  #root {
+    line-height: 1.5;
+    color: #000;
+    background-color: #fff;
+    margin: auto;
+  }
+  
+  input::placeholder{
+    text-align:center;
+  }
+  
+  .ReactModal__Content {
+    border: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  
+  .three-dots-pulse {
+    position: relative;
+    left: -9999px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #000;
+    color: #000;
+    box-shadow: 9999px 0 0 -5px;
+    -webkit-animation: three-dots-pulse 1.5s infinite linear;
+    animation: three-dots-pulse 1.5s infinite linear;
+    -webkit-animation-delay: .25s;
+    animation-delay: .25s;
+  }
+  
+  .three-dots-pulse::before, .three-dots-pulse::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: #000;
+    color: #000;
+  }
+  
+  .three-dots-pulse::before {
+    box-shadow: 9984px 0 0 -5px;
+    -webkit-animation: three-dots-pulse-before 1.5s infinite linear;
+    animation: three-dots-pulse-before 1.5s infinite linear;
+    -webkit-animation-delay: 0s;
+    animation-delay: 0s;
+  }
+  
+  .three-dots-pulse::after {
+    box-shadow: 10014px 0 0 -5px;
+    -webkit-animation: three-dots-pulse-after 1.5s infinite linear;
+    animation: three-dots-pulse-after 1.5s infinite linear;
+    -webkit-animation-delay: .5s;
+    animation-delay: .5s;
+  }
+  
+  @keyframes three-dots-pulse-before {
+    0% {
+        box-shadow: 9984px 0 0 -5px;
+   }
+    30% {
+        box-shadow: 9984px 0 0 2px;
+   }
+    60%, 100% {
+        box-shadow: 9984px 0 0 -5px;
+   }
+  }
+  
+  @keyframes three-dots-pulse {
+    0% {
+        box-shadow: 9999px 0 0 -5px;
+   }
+    30% {
+        box-shadow: 9999px 0 0 2px;
+   }
+    60%, 100% {
+        box-shadow: 9999px 0 0 -5px;
+   }
+  }
+  
+  @keyframes three-dots-pulse-after {
+    0% {
+        box-shadow: 10014px 0 0 -5px;
+   }
+    30% {
+        box-shadow: 10014px 0 0 2px;
+   }
+    60%, 100% {
+        box-shadow: 10014px 0 0 -5px;
+   }
+  }
