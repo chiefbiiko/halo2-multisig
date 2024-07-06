@@ -481,6 +481,7 @@ async fn main() {
 
         // let subq_aggr_inst = subq_aggr_circuit.num_instance();
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_verifier_shplonk");
+        File::create(subq_aggr_sol_verifier_path.clone()).expect("solidity file");
         let solidity_verifier = gen_evm_verifier_shplonk::<AggregationCircuit>(
             &kzg_params,
             subq_aggr_vk,
