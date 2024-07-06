@@ -28,6 +28,7 @@ app.get('/getStorageProof', (req, res) => {
     const child = spawn(rustExecutable, [masterSafeAddress, msgHash], options);
 
     let scriptOutput = "";
+    let capturingOutput = false;
 
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (data) => {
@@ -65,15 +66,20 @@ app.get('/getStorageProof', (req, res) => {
 
 function extractEvmCalldata(output) {
     const lines = output.split('\n');
+    let capturing = false;
+    let evmCalldata = "";
+
     for (const line of lines) {
-        if (line.includes('evm_calldata')) {
-            const match = line.match(/✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done (.+)$/);
-            if (match) {
-                return match[1].trim();
-            }
+        if (line.includes('✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done')) {
+            capturing = true;
+            continue;
+        }
+        if (capturing) {
+            evmCalldata += line.trim();
         }
     }
-    return null;
+
+    return evmCalldata ? evmCalldata : null;
 }
 
 app.listen(port, '0.0.0.0', () => {
