@@ -2,8 +2,7 @@ import React from "react"
 import { Flex, Box, Text, Button } from "rebass"
 import { Input, Checkbox, Label } from "@rebass/forms"
 import { useDispatch, useSelector } from "react-redux"
-import { dump, fund } from "./redux"
-import { SUBSTRATE_ADDRESS_PATTERN, T0RN_TERMS } from "./constants"
+import { dump, signMsg } from "./redux"
 
 export default function HomeScreen() {
   const { masterSafe, oldSigner, newSigner } = useSelector(
@@ -46,7 +45,7 @@ export default function HomeScreen() {
       <Input
         type="text"
         id="masterSafe"
-        placeholder="Enter master Safe address"
+        placeholder="Master Safe"
         title="0x..."
         onChange={e => dispatch(dump({ masterSafe: e.target.value }))}
         value={masterSafe || ""}
@@ -57,7 +56,7 @@ export default function HomeScreen() {
       <Input
         type="text"
         id="oldSigner"
-        placeholder="Signer address to remove"
+        placeholder="Old signer"
         title="0x..."
         onChange={e => dispatch(dump({ oldSigner: e.target.value }))}
         value={oldSigner || ""}
@@ -68,7 +67,7 @@ export default function HomeScreen() {
       <Input
         type="text"
         id="newSigner"
-        placeholder="Signer address to add"
+        placeholder="New signer"
         title="0x..."
         onChange={e => dispatch(dump({ newSigner: e.target.value }))}
         value={newSigner || ""}
@@ -101,9 +100,9 @@ export default function HomeScreen() {
 
 
 
-        
 
-      <Button
+
+      {/* <Button
         disabled={
           !SUBSTRATE_ADDRESS_PATTERN.test(substrateAddress) || !termsAccepted
         }
@@ -123,7 +122,7 @@ export default function HomeScreen() {
         onClick={() => dispatch(fund(substrateAddress))}
       >
         GET {process.env.REACT_APP_AMOUNT}T0RN
-      </Button>
+      </Button> */}
     </Box>
   )
 }

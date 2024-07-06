@@ -12,26 +12,8 @@ export default function Footer() {
           fontSize: [16, 18, 20]
         }}
       >
-        <Text>
-          {"🏈 " +
-            new Date().getFullYear() +
-            " " +
-            process.env.REACT_APP_AUTHOR_NAME}
-        </Text>
+        <span>🅰️🅰️🅰️®</span>
         <Box mx="auto" />
-        <Link
-          href={process.env.REACT_APP_PDOT_APPS_URL}
-          target="_blank"
-          style={{
-            color: "#000",
-            margin: "0 0 0 0.625em",
-            textDecoration: "none",
-            fontWeight: "bolder",
-            cursor: "pointer"
-          }}
-        >
-          <span>_</span>
-        </Link>
       </Flex>
     </Box>
   )

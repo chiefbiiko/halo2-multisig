@@ -2,8 +2,8 @@
     "name": "app",
     "version": "0.0.0",
     "private": true,
-    "author": "chiefbiiko",
-    "description": "simple faucet frontend",
+    "author": "",
+    "description": "simple frontend",
     "dependencies": {
         "@rebass/forms": "4.0.6",
         "@reduxjs/toolkit": "1.8.1",
@@ -19,8 +19,8 @@
         "redux-thunk": "2.3.0"
     },
     "scripts": {
-        "start": "react-scripts start",
-        "build": "react-scripts build",
+        "start": "react-scripts --openssl-legacy-provider start",
+        "build": "react-scripts --openssl-legacy-provider build",
         "test": "react-scripts test",
         "fmt": "npx prettier --no-semi --arrow-parens avoid --trailing-comma none --print-width 80 --write './src/*.js'"
     },
