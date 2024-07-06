@@ -2,7 +2,7 @@ import React from 'react'
 import Button from './button'
 import { useDispatch, useSelector } from 'react-redux'
 import { useMediaQuery } from 'react-responsive'
-// import { connect, disconnect, useMyMetaMask } from './redux'
+import { dump } from './redux'
 import _MetaMask from '@metamask/sdk'
 
 export default function ConnectButton({ style }) {
@@ -21,10 +21,10 @@ export default function ConnectButton({ style }) {
       onClick={_ => {
         // shieldedAddress ? dispatch(disconnect()) : dispatch(connect(account))
         new _MetaMask({}).getProvider().request({ method: 'eth_requestAccounts' })
-        dispatch({connected: true})
+        dispatch(dump({connected: true}))
       }}
     >
-      {isSmol ? '🔌' : connected ? 'Disconnect' : 'Connect'}
+      {isSmol ? '🔌' : connected ? '🔌' : 'Connect'}
     </Button>
   )
 }

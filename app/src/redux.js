@@ -47,6 +47,7 @@ let sdk
 
 export function sign(masterSafe, oldSigner, newSigner) {
    return async function(dispatch, getState) {
+    metamask = new MetaMask()
     const provider = new ethers.JsonRpcProvider(
         process.env.RPC ?? "https://rpc.gnosis.gateway.fm"
       )
@@ -270,28 +271,28 @@ function onAccountsChanged(dispatch, getState, _accounts) {
 //   }
 // }
 
-// export function disconnect() {
-//   return async function (dispatch, _getState) {
-//     metamask.provider.removeAllListeners('accountsChanged')
-//     metamask.provider.removeAllListeners('chainChanged')
-//     // TODO not yet killing sdk connections
-//     dispatch(
-//       dump({
-//         shieldedPrivateKey: undefined,
-//         shieldedBalance: {},
-//         standardBalance: {},
-//         shieldedAddress: null,
-//         showConnectModal: false,
-//         showSecretSeedInput: false,
-//         shieldedAccountSeed: null,
-//         selectedMenu: null,
-//         isRegistered: null,
-//         utxosh: [],
-//         viewingKey: undefined
-//       })
-//     )
-//   }
-// }
+export function disconnect() {
+  return async function (dispatch, _getState) {
+    metamask.provider.removeAllListeners('accountsChanged')
+    metamask.provider.removeAllListeners('chainChanged')
+    // TODO not yet killing sdk connections
+    dispatch(
+      dump({
+        shieldedPrivateKey: undefined,
+        shieldedBalance: {},
+        standardBalance: {},
+        shieldedAddress: null,
+        showConnectModal: false,
+        showSecretSeedInput: false,
+        shieldedAccountSeed: null,
+        selectedMenu: null,
+        isRegistered: null,
+        utxosh: [],
+        viewingKey: undefined
+      })
+    )
+  }
+}
 
 // export function switchNetwork() {
 //   return async function (dispatch, getState) {
