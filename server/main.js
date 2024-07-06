@@ -45,9 +45,11 @@ app.get('/getStorageProof', (req, res) => {
         console.log('closing code: ' + code);
         console.log('Full output of script: ', scriptOutput);
 
-
         try {
-            const proof = scriptOutput.trim();
+            const proof = extractEvmCalldata(scriptOutput);
+            if (!proof) {
+                return res.status(500).json({ error: 'Failed to find evm_calldata in the output' });
+            }
             res.json({ masterSafeAddress, msgHash, proof });
         } catch (e) {
             console.error(`Failed to process output: ${e.message}`);
@@ -60,6 +62,19 @@ app.get('/getStorageProof', (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     });
 });
+
+function extractEvmCalldata(output) {
+    const lines = output.split('\n');
+    for (const line of lines) {
+        if (line.includes('evm_calldata')) {
+            const match = line.match(/evm_calldata: (.*)/);
+            if (match) {
+                return match[1].trim();
+            }
+        }
+    }
+    return null;
+}
 
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server running at http://localhost:${port}`);

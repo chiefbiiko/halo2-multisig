@@ -530,7 +530,7 @@ async fn main() {
         instances)
     };
 
-    println!("{}", evm_calldata);
+    println!("{}", const_hex::encode(evm_calldata));
 
     // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
     // evm_verify(solidity_verifier, instances, subq_proof);
