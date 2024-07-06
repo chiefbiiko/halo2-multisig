@@ -1,32 +1,20 @@
 import React from 'react'
 import { Box } from 'rebass'
 import { useSelector } from 'react-redux'
-// import Fund from './fund'
-// import Transfer from './transfer'
-// import Withdraw from './withdraw'
-// import Profile from './profile'
-// import History from './history'
-// import Faucet from './faucet'
-// import Community from './community'
+import Sign from './sign'
+import Gen from './gen'
+import Exec from './exec'
 
 export default function Home() {
-//   const { selectedMenu } = useSelector(state => state)
-//   let selectedComponent
-//   if (selectedMenu === 'fund') {
-//     selectedComponent = <Fund />
-//   } else if (selectedMenu === 'transfer') {
-//     selectedComponent = <Transfer />
-//   } else if (selectedMenu === 'withdraw') {
-//     selectedComponent = <Withdraw />
-//   } else if (selectedMenu === 'history') {
-//     selectedComponent = <History />
-//   } else if (selectedMenu === 'profile') {
-//     selectedComponent = <Profile />
-//   } else if (selectedMenu === 'faucet') {
-//     selectedComponent = <Faucet />
-//   } else if (selectedMenu === 'community') {
-//     selectedComponent = <Community />
-//   }
+  const { selectedMenu } = useSelector(state => state)
+  let selectedComponent
+  if (selectedMenu === 'sign') {
+    selectedComponent = <Sign />
+  } else if (selectedMenu === "gen") {
+    selectedComponent = <Gen />
+  } else if (selectedMenu === "exec") {
+    selectedComponent = <Exec />
+  }
   return (
     <Box
       sx={{

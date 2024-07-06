@@ -7,7 +7,7 @@
   body {
     font: 400 16px 'Open Sans', sans-serif;
     margin: 0;
-    background: url('/public/glo.jpeg');
+    background: url('/public/glo.jpeg') center top;
     background-size: cover;
   }
   

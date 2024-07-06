@@ -2,7 +2,7 @@ import React from 'react'
 import Button from './button'
 import { useDispatch, useSelector } from 'react-redux'
 import { useMediaQuery } from 'react-responsive'
-import { connect, disconnect, useMyMetaMask } from './redux'
+// import { connect, disconnect, useMyMetaMask } from './redux'
 import _MetaMask from '@metamask/sdk'
 
 export default function ConnectButton({ style }) {
