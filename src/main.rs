@@ -301,8 +301,8 @@ async fn main() {
 
         // mmr oracle
         let (/*mmr_root,*/ mmr_peaks, mmr_proof) = mmr_1(&block_hash);
-        log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
-        log::info!("mmr_peaks with len {} {:?}", &mmr_peaks.len(), &mmr_peaks);
+        // log::info!("mmr_proof with len {} {:?}", &mmr_proof.len(), &mmr_proof);
+        // log::info!("mmr_peaks with len {} {:?}", &mmr_peaks.len(), &mmr_peaks);
 
         let input_subquery = CircuitInputHeaderSubquery { header_rlp, mmr_proof, field_idx: STATE_ROOT_INDEX as u32 };
 

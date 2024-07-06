@@ -67,7 +67,7 @@ function extractEvmCalldata(output) {
     const lines = output.split('\n');
     for (const line of lines) {
         if (line.includes('evm_calldata')) {
-            const match = line.match(/evm_calldata: (.*)/);
+            const match = line.match(/✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done (.+)$/);
             if (match) {
                 return match[1].trim();
             }
