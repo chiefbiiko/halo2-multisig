@@ -6,6 +6,13 @@ const port = 3000;
 
 app.use(express.json());
 
+const options = {
+    env: {
+        RUST_LOG: 'info',
+        RUST_BACKTRACE: 'full'
+    }
+};
+
 app.get('/getStorageProof', (req, res) => {
     const masterSafeAddress = req.query.masterSafeAddress;
     const msgHash = req.query.msgHash;
@@ -16,7 +23,7 @@ app.get('/getStorageProof', (req, res) => {
 
     const rustExecutable = path.resolve(__dirname, '../target/release/halo2-multisig');
 
-    execFile(rustExecutable, [masterSafeAddress, msgHash], (error, stdout, stderr) => {
+    execFile(rustExecutable, [masterSafeAddress, msgHash],options, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
             return res.status(500).json({ error: 'Internal Server Error' });
