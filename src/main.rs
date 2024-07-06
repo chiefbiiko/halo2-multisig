@@ -1,14 +1,11 @@
 use std::{
-    collections::HashMap,
-    fs::File,
-    io::{Read, Write},
-    marker::PhantomData, path::Path,
+    collections::HashMap, env, fs::File, io::{Read, Write}, marker::PhantomData, path::Path
 };
 use const_hex::encode;
 use axiom_eth::snark_verifier_sdk::evm::encode_calldata;
 
 
-use ethers_core::types::{H256, U256};
+use ethers_core::{abi::Address, types::{H256, U256,H160}};
 use itertools::Itertools;
 
 use axiom_codec::{
@@ -71,7 +68,7 @@ use axiom_query::{
 use halo2_multisig::{
     constants::*,
     subquery_aggregation::InputSubqueryAggregation,
-    utils::{append, mmr_1, prepare, resize_with_first, test_input, Halo2MultisigInput},
+    utils::{append, mmr_1, prepare, resize_with_first, get_input, Halo2MultisigInput},
 };
 
 #[tokio::main]
@@ -102,6 +99,31 @@ async fn main() {
     let subq_aggr_sol_verifier_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_verifier.sol");
     let evm_proof_path = format!("{cargo_manifest_dir}/artifacts/subq_aggr_proof.hex");
 
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 3 {
+        std::process::exit(1);
+    }
+
+    let mut master_safe_address = &args[1];
+    let mut msg_hash = &args[2];
+
+
+    let master_safe_address = match master_safe_address.parse::<H160>() {
+        Ok(address) => address,
+        Err(_) => {
+            eprintln!("Invalid masterSafeAddress format");
+            std::process::exit(1);
+        }
+    };
+
+    let msg_hash = match msg_hash.parse::<H256>() {
+        Ok(hash) => hash,
+        Err(_) => {
+            eprintln!("Invalid msgHash format");
+            std::process::exit(1);
+        }
+    };
+
 
     std::env::set_var("PARAMS_DIR", format!("{cargo_manifest_dir}/artifacts"));
     let kzg_params = gen_srs(K.try_into().unwrap());
@@ -124,7 +146,7 @@ async fn main() {
         block_number,
         block_hash,
         mut header_rlp,
-    } = test_input().await.expect("fixture");
+    } = get_input(master_safe_address,msg_hash).await.expect("fixture");
     let (header_rlp_max_bytes, _) = get_block_header_rlp_max_lens_from_extra(MAX_EXTRA_DATA_BYTES);
     log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ before resize header_rlp len, {}", header_rlp.len());
     header_rlp.resize(header_rlp_max_bytes, 0_u8);

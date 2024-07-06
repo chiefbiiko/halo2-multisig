@@ -88,11 +88,11 @@ pub fn to_msg_hash(hash: &str) -> H256 {
     H256::from(const_hex::decode_to_array::<&str, 32>(hash).expect("msg hash"))
 }
 
-pub async fn test_input() -> Result<Halo2MultisigInput> {
+pub async fn get_input(safe_address: Address,msg_hash: H256) -> Result<Halo2MultisigInput> {
     fetch_input(
         "https://rpc.gnosis.gateway.fm",
-        to_address("0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"),
-        to_msg_hash("0xa225aed0c0283cef82b24485b8b28fb756fc9ce83d25e5cf799d0c8aa20ce6b7"),
+        safe_address,
+        msg_hash,
     )
     .await
 }
