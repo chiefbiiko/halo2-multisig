@@ -1,5 +1,5 @@
 const express = require('express');
-const { execFile } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 const app = express();
 const port = 3000;
@@ -23,30 +23,41 @@ app.get('/getStorageProof', (req, res) => {
 
     const rustExecutable = path.resolve(__dirname, '../target/release/halo2-multisig');
 
-    console.log("Running proover")
+    console.log("Running prover");
 
-    execFile(rustExecutable, [masterSafeAddress, msgHash],options, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`);
-            return res.status(500).json({ error: 'Internal Server Error' });
-        }
+    const child = spawn(rustExecutable, [masterSafeAddress, msgHash], options);
 
-        if (stderr) {
-            console.error(`stderr: ${stderr}`);
-            return res.status(500).json({ error: 'Internal Server Error' });
-        }
+    let scriptOutput = "";
 
-        let proof;
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (data) => {
+        console.log('stdout: ' + data);
+        scriptOutput += data.toString();
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (data) => {
+        console.error('stderr: ' + data);
+        scriptOutput += data.toString();
+    });
+
+    child.on('close', (code) => {
+        console.log('closing code: ' + code);
+        console.log('Full output of script: ', scriptOutput);
+
+
         try {
-            console.log("returning proof");
-            proof = stdout.trim();
+            const proof = scriptOutput.trim();
+            res.json({ masterSafeAddress, msgHash, proof });
         } catch (e) {
             console.error(`Failed to process output: ${e.message}`);
-            return res.status(500).json({ error: 'Internal Server Error' });
+            res.status(500).json({ error: 'Internal Server Error' });
         }
+    });
 
-        console.log(proof);
-        res.json({ masterSafeAddress, msgHash, proof });
+    child.on('error', (error) => {
+        console.error(`Failed to start subprocess: ${error.message}`);
+        res.status(500).json({ error: 'Internal Server Error' });
     });
 });
 
