@@ -471,7 +471,9 @@ async fn main() {
     .expect("subquery aggregation circuit");
 
     //WIP
-    let (subq_proof, solidity_verifier, instances) = {
+    let (subq_proof, 
+        // solidity_verifier, 
+        instances) = {
         let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
         let mut vk_file = File::create(&subq_aggr_vk_path).expect("subq vk bin file");
         let subq_aggr_vk = subq_aggr_pk
@@ -482,12 +484,12 @@ async fn main() {
         // let subq_aggr_inst = subq_aggr_circuit.num_instance();
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_verifier_shplonk");
         File::create(subq_aggr_sol_verifier_path.clone()).expect("solidity file");
-        let solidity_verifier = gen_evm_verifier_shplonk::<AggregationCircuit>(
-            &kzg_params,
-            subq_aggr_vk,
-            subq_aggr_circuit.num_instance(),
-            Some(Path::new(&subq_aggr_sol_verifier_path)),
-        );
+        // let solidity_verifier = gen_evm_verifier_shplonk::<AggregationCircuit>(
+        //     &kzg_params,
+        //     subq_aggr_vk,
+        //     subq_aggr_circuit.num_instance(),
+        //     Some(Path::new(&subq_aggr_sol_verifier_path)),
+        // );
 
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_proof_shplonk");
         let instances = subq_aggr_circuit.instances();
@@ -502,12 +504,15 @@ async fn main() {
         let evm_proof = encode(encode_calldata(&instances, &subq_proof));
         let mut f = File::create(evm_proof_path).expect("proof file");
         f.write(evm_proof.as_bytes()).expect("write proof");
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done");
 
-        (subq_proof, solidity_verifier, instances)
+        (subq_proof, 
+        // solidity_verifier, 
+        instances)
     };
 
-    log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
-    evm_verify(solidity_verifier, instances, subq_proof);
+    // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
+    // evm_verify(solidity_verifier, instances, subq_proof);
 }
 
 //=====NOTES=====
