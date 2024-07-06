@@ -29,16 +29,17 @@ app.get('/getStorageProof', (req, res) => {
 
         let proof;
         try {
-            proof = JSON.parse(stdout);
+            proof = stdout.trim();
         } catch (e) {
-            console.error(`Failed to parse JSON: ${e.message}`);
+            console.error(`Failed to process output: ${e.message}`);
             return res.status(500).json({ error: 'Internal Server Error' });
         }
 
+        console.log(proof);
         res.json({ masterSafeAddress, msgHash, proof });
     });
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Server running at http://localhost:${port}`);
 });

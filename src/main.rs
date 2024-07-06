@@ -22,7 +22,7 @@ use axiom_eth::{
     keccak::{promise::generate_keccak_shards_from_calls, types::ComponentTypeKeccak},
     rlc::circuit::RlcCircuitParams,
     snark_verifier_sdk::{
-        evm::{gen_evm_proof_shplonk, gen_evm_verifier_shplonk, evm_verify}, halo2::{aggregation::{AggregationCircuit, AggregationConfigParams}, gen_snark_shplonk}, CircuitExt
+        evm::{gen_evm_proof_shplonk, evm_verify}, halo2::{aggregation::{AggregationCircuit, AggregationConfigParams}, gen_snark_shplonk}, CircuitExt
     },
     utils::{
         build_utils::pinning::{aggregation::AggregationCircuitPinning, Halo2CircuitPinning, PinnableCircuit},
@@ -32,7 +32,7 @@ use axiom_eth::{
             },
             ComponentCircuit, ComponentPromiseResultsInMerkle, ComponentType,
         },
-        snark_verifier::EnhancedSnark,
+        snark_verifier::{EnhancedSnark,gen_evm_calldata_shplonk},
     },
 };
 use axiom_query::{
@@ -493,7 +493,7 @@ async fn main() {
     .expect("subquery aggregation circuit");
 
     //WIP
-    let (subq_proof, 
+    let (evm_calldata, 
         // solidity_verifier, 
         instances) = {
         let (subq_aggr_pk, subq_aggr_pinning) = subq_aggr_circuit.create_pk(&kzg_params, subq_aggr_pk_path, subq_aggr_pinning_path).expect("subq aggr pk");
@@ -522,16 +522,15 @@ async fn main() {
 
 
         let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
-        let subq_proof = gen_evm_proof_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit, instances.clone());
-        let evm_proof = encode(encode_calldata(&instances, &subq_proof));
-        let mut f = File::create(evm_proof_path).expect("proof file");
-        f.write(evm_proof.as_bytes()).expect("write proof");
+        let evm_calldata = gen_evm_calldata_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit);
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done");
 
-        (subq_proof, 
+        (evm_calldata, 
         // solidity_verifier, 
         instances)
     };
+
+    println!("{}", evm_calldata);
 
     // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ evm_verify");
     // evm_verify(solidity_verifier, instances, subq_proof);
