@@ -503,9 +503,12 @@ async fn main() {
         subq_aggr_vk.write(&mut vk_file, axiom_eth::halo2_proofs::SerdeFormat::RawBytes)
             .expect("subq vk bin write");
 
+
+        // Generating evm verifier
         // let subq_aggr_inst = subq_aggr_circuit.num_instance();
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_verifier_shplonk");
-        File::create(subq_aggr_sol_verifier_path.clone()).expect("solidity file");
+        // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_verifier_shplonk");
+        // File::create(subq_aggr_sol_verifier_path.clone()).expect("solidity file");
+
         // let solidity_verifier = gen_evm_verifier_shplonk::<AggregationCircuit>(
         //     &kzg_params,
         //     subq_aggr_vk,
@@ -513,14 +516,12 @@ async fn main() {
         //     Some(Path::new(&subq_aggr_sol_verifier_path)),
         // );
 
-        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_proof_shplonk");
-        let instances = subq_aggr_circuit.instances();
-
         //  Just for testing b4 doing the real proof
         // let prover = MockProver::run(K as u32, &subq_aggr_circuit, instances).unwrap();
         // log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ MOCK PROOF OK?? = , {:?}", prover.verify());
 
 
+        log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ gen_evm_calldata_shplonk");
         let instances = subq_aggr_circuit.instances();//prover_circuit.instances();
         let evm_calldata = gen_evm_calldata_shplonk(&kzg_params, &subq_aggr_pk, subq_aggr_circuit);
         log::info!("✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ Proof Done");
