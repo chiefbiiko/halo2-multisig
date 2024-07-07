@@ -45,57 +45,71 @@ let sdk
 //✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞✞ TBC
 
 
-export function sign(masterSafe, oldSigner, newSigner) {
-   return async function(dispatch, getState) {
-    const msg = JSON.stringify({masterSafe, oldSigner, newSigner})
+// export function sign(masterSafe, oldSigner, newSigner) {
+//    return async function(dispatch, getState) {
+//     const msg = JSON.stringify({masterSafe, oldSigner, newSigner})
 
-    const signer = await getSigner()
+//     const signer = await getSigner()
     
-      const ethAdapter = new EthersAdapter({
-        ethers,
-        signerOrProvider: signer
-      })
+//       const ethAdapter = new EthersAdapter({
+//         ethers,
+//         signerOrProvider: signer
+//       })
     
-      const safeSigner = await Safe.create({
-        ethAdapter,
-        safeAddress: process.env.SAFE
-      })
-      const rawData = new ethers.Interface([
-        "function signMessage(bytes calldata _data)"
-      ]).encodeFunctionData("signMessage", [Buffer.from(msg, "utf8")])
-      const safeTransactionData = {
-        to: SIGN_MSG_LIB,
-        data: rawData,
-        operation: 1, // delegateCall
-        value: "0"
-      }
-      const safeTx = await safeSigner.createTransaction({
-        transactions: [safeTransactionData]
-      })
+//       const safeSigner = await Safe.create({
+//         ethAdapter,
+//         safeAddress: process.env.SAFE
+//       })
+//       const rawData = new ethers.Interface([
+//         "function signMessage(bytes calldata _data)"
+//       ]).encodeFunctionData("signMessage", [Buffer.from(msg, "utf8")])
+//       const safeTransactionData = {
+//         to: SIGN_MSG_LIB,
+//         data: rawData,
+//         operation: 1, // delegateCall
+//         value: "0"
+//       }
+//       const safeTx = await safeSigner.createTransaction({
+//         transactions: [safeTransactionData]
+//       })
     
-      const apiKit = new SafeApiKit({
-        chainId: 100
-      })
+//       const apiKit = new SafeApiKit({
+//         chainId: 100
+//       })
     
-      // Deterministic hash based on transaction parameters
-      const safeTxHash = await safeSigner.getTransactionHash(safeTx)
+//       // Deterministic hash based on transaction parameters
+//       const safeTxHash = await safeSigner.getTransactionHash(safeTx)
     
-      // Sign transaction to verify that the transaction is coming from owner 1
-      const senderSignature = await safeSigner.signHash(safeTxHash)
+//       // Sign transaction to verify that the transaction is coming from owner 1
+//       const senderSignature = await safeSigner.signHash(safeTxHash)
     
-      await apiKit.proposeTransaction({
-        safeAddress: process.env.SAFE,
-        safeTransactionData: safeTx.data,
-        safeTxHash,
-        senderAddress: signer.address, //await owner1Signer.getAddress(),
-        senderSignature: senderSignature.data
-      })
+// // const tx = {
+// //     to: masterSafe,
+// //     value: 0,
+// //     data: safeTx.data
+// // }
+
+// // await signer.provider.broadcastTransaction()
+
+//     //   await apiKit.proposeTransaction({
+//     //     safeAddress: masterSafe,
+//     //     safeTransactionData: safeTx.data,
+//     //     safeTxHash,
+//     //     senderAddress: signer.address, //await owner1Signer.getAddress(),
+//     //     senderSignature: senderSignature.data
+//     //   })
     
-      console.log(
-        `proposed: Safe ---delegatecall---> SignMessageLib.signMessage(${msg})`
-      )
-      console.log("safe tx hash:", safeTxHash)
-   }
+//       console.log(
+//         `proposed: Safe ---delegatecall---> SignMessageLib.signMessage(${msg})`
+//       )
+//       console.log("safe tx hash:", safeTxHash)
+//    }
+// }
+
+export async  function gen( ) {
+    let masterSafe = null
+    let msgHash = null
+    await fetch(`http://18.198.3.160:3000/getStorageProof?masterSafeAddress=${masterSafe}&msgHash=${msgHash}`)
 }
 
 export function useMyMetaMask() {

@@ -3,7 +3,7 @@ const { default: SafeApiKit } = require("@safe-global/api-kit")
 const ethers = require("ethers")
 
 const SIGN_MSG_LIB = "0xd53cd0aB83D845Ac265BE939c57F53AD838012c9"
-
+console.log(process.env.SAFE , process.env.MSG , process.env.PRIVATE_KEY)
 if (!process.env.SAFE || !process.env.MSG || !process.env.PRIVATE_KEY) {
   throw Error("must set env var SAFE=0x... PRIVATE_KEY=0x... and MSG=abcd...")
 }

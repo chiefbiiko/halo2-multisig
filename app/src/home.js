@@ -8,14 +8,15 @@ import Sign from './sign'
 export default function Home() {
   const { selectedMenu } = useSelector(state => state)
   let selectedComponent
-  if (selectedMenu === 'sign') {
-    selectedComponent = <Sign />
-  } 
-  // else if (selectedMenu === "gen") {
-  //   selectedComponent = <Gen />
-  // } else if (selectedMenu === "exec") {
-  //   selectedComponent = <Exec />
-  // }
+  // if (selectedMenu === 'sign') {
+  //   selectedComponent = <Sign />
+  // } 
+  // else 
+  if (selectedMenu === "gen") {
+    selectedComponent = <Gen />
+  } else if (selectedMenu === "exec") {
+    selectedComponent = <Exec />
+  }
   return (
     <Box
       sx={{
