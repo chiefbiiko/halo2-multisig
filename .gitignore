@@ -24,3 +24,5 @@ params/
 .DS_Store
 
 artifacts
+
+server/node_modules
