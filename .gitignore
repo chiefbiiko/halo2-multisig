@@ -13,7 +13,7 @@ target/
 params/
 !params/integration_test
 
-*.png
+# *.png
 
 /halo2_ecc/src/bn254/data/
 /halo2_ecc/src/secp256k1/data/
