@@ -5,40 +5,19 @@ import { Input } from '@rebass/forms'
 import { useDispatch, useSelector } from 'react-redux'
 import Button from './button'
 // import StandardTokenInput from './std-token-input'
-import { dump, sign  } from './redux'
-// import { gte } from './util'
+import { dump, gen  } from './redux'
 
-// function validate(shieldedRecipient, amount, balance) {
-//   return (
-//     !!shieldedRecipient &&
-//     /^\d+(\.\d+)?$/.test(amount) &&
-//     gte(balance, amount) &&
-//     Number(amount) !== 0
-//   )
-// }
-
-export default function Sign() {
+export default function Gen() {
 //   const { account } = useMyMetaMask()
   const {
-    // fundShieldedRecipient,
-    // tokenAmount,
-    // transferNote,
-    // shieldedAddress,
-    // selectedToken,
-    // standardBalance,
-    // frens = [],
-    // name
     masterSafe,
-    oldSigner,
-    newSigner
+    // oldSigner,
+    // newSigner
+    msgHash
   } = useSelector(state => state)
   const dispatch = useDispatch()
-//   const valid = validate(
-//     fundShieldedRecipient || shieldedAddress,
-//     tokenAmount,
-//     standardBalance[selectedToken]
-//   )
-const valid = masterSafe && oldSigner && newSigner
+
+const valid = masterSafe && msgHash
   return (
     <Box
       sx={{
@@ -56,10 +35,10 @@ const valid = masterSafe && oldSigner && newSigner
           flexWrap: 'wrap'
         }}
       >
-        Sign
+        🅰️🅰️🅰️®
       </Flex>
 
-      <Input
+      {/* <Input
         type="text"
         id="masterSafe"
         placeholder="Master Safe"
@@ -74,8 +53,25 @@ const valid = masterSafe && oldSigner && newSigner
           fontSize: [16, 18, 20],
           textAlign: 'center'
         }}
-      />
+      /> */}
 
+
+{/* <Input
+        type="text"
+        id="subSafe"
+        placeholder="Sub Safe"
+        title="0x..."
+        onChange={e =>
+          dispatch(dump({ msgHash: e.target.value }))
+        }
+        value={msgHash ?? ''}
+        bg="#fff"
+        sx={{
+          marginBottom: '0.625em',
+          fontSize: [16, 18, 20],
+          textAlign: 'center'
+        }}
+      /> */}
 
 <Input
         type="text"
@@ -83,9 +79,9 @@ const valid = masterSafe && oldSigner && newSigner
         placeholder="Old signer"
         title="0x..."
         onChange={e =>
-          dispatch(dump({ oldSigner: e.target.value }))
+          dispatch(dump({ msgHash: e.target.value }))
         }
-        value={oldSigner ?? ''}
+        value={msgHash ?? ''}
         bg="#fff"
         sx={{
           marginBottom: '0.625em',
@@ -94,15 +90,15 @@ const valid = masterSafe && oldSigner && newSigner
         }}
       />
 
-      <Input
+<Input
         type="text"
         id="newSigner"
         placeholder="New signer"
         title="0x..."
         onChange={e =>
-          dispatch(dump({ newSigner: e.target.value }))
+          dispatch(dump({ msgHash: e.target.value }))
         }
-        value={newSigner ?? ''}
+        value={msgHash ?? ''}
         bg="#fff"
         sx={{
           marginBottom: '0.625em',
@@ -111,43 +107,17 @@ const valid = masterSafe && oldSigner && newSigner
         }}
       />
 
-      {/* <datalist id="favorite-contacts">
-        {frens?.map(f => {
-          const val = f.name || f.shieldedAddress
-          return (
-            <option key={val} value={val}>
-              {val}
-            </option>
-          )
-        })}
-      </datalist>
-      <StandardTokenInput />
-
-      <Textarea
-        value={transferNote}
-        rows={1}
-        placeholder="Note (optional)"
-        maxLength={255}
-        sx={{
-          textAlign: 'center',
-          resize: 'none',
-          fontSize: [12, 14],
-          marginBottom: '0.625em'
-        }}
-        onChange={e => dispatch(dump({ transferNote: e.target.value }))}
-      ></Textarea> */}
-
       <Button
         disabled={!valid}
-        aria-label="Fund"
+        aria-label="Gen"
         style={{
           cursor: valid ? 'pointer' : 'not-allowed'
         }}
         onClick={() =>
-          dispatch(sign(masterSafe, oldSigner, newSigner))
+          dispatch(gen(masterSafe, msgHash))
         }
       >
-        Sign msg via Safe
+        Recover
       </Button>
     </Box>
   )

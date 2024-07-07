@@ -18,7 +18,7 @@ export default function Menu() {
         flexWrap: 'wrap'
       }}
     >
-      <Text
+      {/* <Text
         onClick={() =>
           dispatch(
             dump({
@@ -33,7 +33,7 @@ export default function Menu() {
         }}
       >
         Sign
-      </Text>
+      </Text> */}
       <Text
         onClick={() =>
           dispatch(
@@ -48,9 +48,9 @@ export default function Menu() {
           fontWeight: selectedMenu === 'gen' ? 'bold' : 'normal'
         }}
       >
-        Prove
+        🅰️🅰️🅰️®
       </Text>
-      <Text
+      {/* <Text
         onClick={() =>
           dispatch(
             dump({
@@ -65,7 +65,7 @@ export default function Menu() {
         }}
       >
         Exec
-      </Text>
+      </Text> */}
     </Flex>
   )
 }

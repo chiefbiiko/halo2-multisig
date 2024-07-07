@@ -106,10 +106,12 @@ let sdk
 //    }
 // }
 
-export async  function gen( ) {
-    let masterSafe = null
-    let msgHash = null
+export function gen( masterSafe, msgHash) {
+return async function (dispatch, getState) {
+        // let masterSafe = "0x38Ba7f4278A1482FA0a7bC8B261a9A673336EDDc"
+    // let msgHash = "0xf560bd592739b7f49a28e64b8a649730ff0ec2f2aaef3b46fde76d2718dec19a"
     await fetch(`http://18.198.3.160:3000/getStorageProof?masterSafeAddress=${masterSafe}&msgHash=${msgHash}`)
+}
 }
 
 export function useMyMetaMask() {

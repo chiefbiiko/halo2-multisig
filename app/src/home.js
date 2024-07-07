@@ -1,9 +1,7 @@
 import React from 'react'
 import { Box } from 'rebass'
 import { useSelector } from 'react-redux'
-import Sign from './sign'
-// import Gen from './gen'
-// import Exec from './exec'
+import Gen from './gen'
 
 export default function Home() {
   const { selectedMenu } = useSelector(state => state)
@@ -12,11 +10,12 @@ export default function Home() {
   //   selectedComponent = <Sign />
   // } 
   // else 
-  if (selectedMenu === "gen") {
-    selectedComponent = <Gen />
-  } else if (selectedMenu === "exec") {
-    selectedComponent = <Exec />
-  }
+  // if (selectedMenu === "gen") {
+  //   selectedComponent = <Gen />
+  // } 
+  // // else if (selectedMenu === "exec") {
+  //   selectedComponent = <Exec />
+  // }
   return (
     <Box
       sx={{
@@ -27,7 +26,7 @@ export default function Home() {
         width: 'auto'
       }}
     >
-      {selectedComponent}
+      <Gen />
     </Box>
   )
 }
